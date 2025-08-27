@@ -6,6 +6,10 @@ from MPC_Controller.common.LegController import LegController
 from MPC_Controller.common.StateEstimator import StateEstimator
 from MPC_Controller.convex_MPC.ConvexMPCLocomotion import ConvexMPCLocomotion
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    import numpy as np
+
 class RobotRunnerMin:
     def __init__(self):
         pass
@@ -51,7 +55,7 @@ class RobotRunnerMin:
         self._desiredStateCommand.reset()
         self._stateEstimator.reset()
 
-    def run(self, dof_states, body_states, commands):
+    def run(self, dof_states: "np.ndarray", body_states: "np.ndarray", commands: "np.ndarray") -> "np.ndarray":
         """
         Runs the overall robot control system by calling each of the major components
         to run each of their respective steps.
