@@ -47,8 +47,8 @@ class Quadruped:
                                       0, 0.063009565, 0, 
                                       0, 0, 0.0716547275]) * 5
             self._bodyHeight = 0.26
-            # TODO: tune friction coeffs
-            self._friction_coeffs = np.ones(4, dtype=DTYPE) * 0.4
+            # TODO: sync this up with the sim friction
+            self._friction_coeffs = np.ones(4, dtype=DTYPE) * 0.8
             # (roll_pitch_yaw, position, angular_velocity, velocity, gravity_place_holder)
             self._mpc_weights = np.array([1.0, 1.5, 0.0,
                                  0.0, 0.0, 50,
