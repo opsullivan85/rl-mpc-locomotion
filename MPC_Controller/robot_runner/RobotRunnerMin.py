@@ -5,27 +5,34 @@ from MPC_Controller.common.Quadruped import Quadruped, RobotType
 from MPC_Controller.common.LegController import LegController
 from MPC_Controller.common.StateEstimator import StateEstimator
 from MPC_Controller.convex_MPC.ConvexMPCLocomotion import ConvexMPCLocomotion
+from nptyping import NDArray, Float32, Shape
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     import numpy as np
+
 
 class RobotRunnerMin:
     def __init__(self):
         pass
 
-
-    def init(self, robotType:RobotType):
+    def init(self, robotType: RobotType, dt: float = 0.01):
         """
         Initializes the robot model, state estimator, leg controller,
         robot data, and any control logic specific data.
         """
         self.robotType = robotType
 
-        self.cMPC = ConvexMPCLocomotion(Parameters.controller_dt,
-                27/(1000.0*Parameters.controller_dt))
+        # TODO tune these parameters
+        self.cMPC = ConvexMPCLocomotion(dt, int(27 / (1000.0 * dt)))
 
         # init quadruped
+        print(f"{self.robotType = }")
+        print(f"{RobotType = }")
+        print(f"{self.robotType in RobotType = }")
+        print(f"{self.robotType == RobotType.GO1 = }")
+        print(f"{RobotType.GO1 in RobotType = }")
         if self.robotType in RobotType:
             self._quadruped = Quadruped(self.robotType)
         else:
@@ -39,7 +46,7 @@ class RobotRunnerMin:
 
         # init desired state command
         self._desiredStateCommand = DesiredStateCommand()
-        
+
         # init controller data
         self.data = ControlFSMData()
         self.data._quadruped = self._quadruped
@@ -55,7 +62,12 @@ class RobotRunnerMin:
         self._desiredStateCommand.reset()
         self._stateEstimator.reset()
 
-    def run(self, dof_states: "np.ndarray", body_states: "np.ndarray", commands: "np.ndarray") -> "np.ndarray":
+    def run(
+        self,
+        dof_states: NDArray[Shape["12, 2"], Float32],
+        body_states: NDArray[Shape["13"], Float32],
+        commands: NDArray[Shape["3"], Float32],
+    ) -> NDArray[Shape["12"], Float32]:
         """Runs the overall robot control system by calling each of the major components
         to run each of their respective steps.
 
@@ -90,11 +102,11 @@ class RobotRunnerMin:
 
         # Update robot states
         self._stateEstimator.update(body_states)
-        
+
         # Run the Control FSM code
         self.cMPC.run(self.data)
 
         # Sets the leg controller commands for the robot
         legTorques = self._legController.updateCommand()
 
-        return legTorques # numpy (12,) float32
+        return legTorques  # numpy (12,) float32
