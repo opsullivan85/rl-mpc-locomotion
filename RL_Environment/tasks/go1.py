@@ -373,7 +373,6 @@ def compute_robot_reward(
     # (reward, reset, feet_in air, feet_air_time, episode sums)
     # type: (Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Dict[str, float], int, int) -> Tuple[Tensor, Tensor]
 
-    # prepare quantities (TODO: return from obs ?)
     base_quat = root_states[:, 3:7]
     base_lin_vel = quat_rotate_inverse(base_quat, root_states[:, 7:10])
     base_ang_vel = quat_rotate_inverse(base_quat, root_states[:, 10:13])

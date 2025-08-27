@@ -126,7 +126,6 @@ class WeightPolicy:
         base_lin_vel = se_result.vBody.flatten() * self.lin_vel_scale
         base_ang_vel = se_result.omegaBody.flatten() * self.ang_vel_scale
 
-        # TODO check gravity direction
         projected_gravity = - se_result.ground_normal_yaw
         commands = _commands * np.array([self.lin_vel_scale, 
                                          self.lin_vel_scale, 

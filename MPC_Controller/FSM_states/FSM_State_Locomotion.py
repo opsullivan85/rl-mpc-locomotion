@@ -77,7 +77,6 @@ class FSM_State_Locomotion(FSM_State):
                     + Parameters.control_mode.name)
         else:
             self.nextStateName = FSM_StateName.RECOVERY_STAND
-            # TODO change to an individual indicator may be better
             Parameters.locomotionUnsafe = True
         
         return self.nextStateName

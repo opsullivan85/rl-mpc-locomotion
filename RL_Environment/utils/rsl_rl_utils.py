@@ -49,7 +49,6 @@ def update_class_from_dict(obj, dict):
 def get_load_path(root, load_run=-1, checkpoint=-1):
     try:
         runs = os.listdir(root)
-        #TODO sort by date to handle change of month
         runs.sort()
         if 'exported' in runs: runs.remove('exported')
         if 'summaries' in runs: runs.remove('summaries')

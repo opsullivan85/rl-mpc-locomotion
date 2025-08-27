@@ -103,9 +103,6 @@ class ControlFSM:
         elif self.operatingMode is FSM_OperatingMode.TRANSITIONING:
             self.transitionDone = self.currentState.transition()
 
-            # TODO Check the robot state for safe operation
-            # safetyPostCheck()
-
             # Run the state transition
             if self.transitionDone:
                 # Exit the current state cleanly
@@ -124,14 +121,6 @@ class ControlFSM:
                 self.operatingMode = FSM_OperatingMode.NORMAL
         else:
             raise NotImplementedError
-            # TODO Check the robot state for safe operation
-            # safetyPostCheck()
-        
-
-        # TODO if ESTOP
-        # self.currentState = self.statesList.passive
-        # self.currentState.onEnter()
-        # nextStateName = self.currentState.stateName
 
         # Print the current state of the FSM
         self.printInfo(0) 
