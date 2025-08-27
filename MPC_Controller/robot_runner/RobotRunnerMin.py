@@ -28,15 +28,7 @@ class RobotRunnerMin:
         self.cMPC = ConvexMPCLocomotion(dt, int(27 / (1000.0 * dt)))
 
         # init quadruped
-        print(f"{self.robotType = }")
-        print(f"{RobotType = }")
-        print(f"{self.robotType in RobotType = }")
-        print(f"{self.robotType == RobotType.GO1 = }")
-        print(f"{RobotType.GO1 in RobotType = }")
-        if self.robotType in RobotType:
-            self._quadruped = Quadruped(self.robotType)
-        else:
-            raise Exception("Invalid RobotType")
+        self._quadruped = Quadruped(self.robotType)
 
         # init leg controller
         self._legController = LegController(self._quadruped)

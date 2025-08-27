@@ -13,7 +13,7 @@ class Quadruped:
 
     def __init__(self, robotype:RobotType):
 
-        if robotype is RobotType.ALIENGO:
+        if robotype.value == RobotType.ALIENGO.value:
             self._abadLinkLength = 0.083
             self._hipLinkLength = 0.25
             self._kneeLinkLength = 0.25
@@ -35,7 +35,7 @@ class Quadruped:
             # self._mpc_weights = [0.25, 0.25, 10, 2, 2, 50, 0, 0, 0.3, 0.2, 0.2, 0.1, 0]
             # self._mpc_weights = [1., 1., 0, 0, 0, 10, 0., 0., .1, .1, .1, .0, 0]
 
-        elif robotype is RobotType.GO1:
+        elif robotype.value == RobotType.GO1.value:
             self._abadLinkLength = 0.08
             self._hipLinkLength = 0.213
             self._kneeLinkLength = 0.213
@@ -47,6 +47,7 @@ class Quadruped:
                                       0, 0.063009565, 0, 
                                       0, 0, 0.0716547275]) * 5
             self._bodyHeight = 0.26
+            # TODO: tune friction coeffs
             self._friction_coeffs = np.ones(4, dtype=DTYPE) * 0.4
             # (roll_pitch_yaw, position, angular_velocity, velocity, gravity_place_holder)
             self._mpc_weights = np.array([1.0, 1.5, 0.0,
@@ -55,7 +56,7 @@ class Quadruped:
                                  1.0, 1.0, 0.1,
                                  0.0], dtype=DTYPE) * 10
 
-        elif robotype is RobotType.A1:
+        elif robotype.value == RobotType.A1.value:
             self._abadLinkLength = 0.08505
             self._hipLinkLength = 0.2
             self._kneeLinkLength = 0.2
