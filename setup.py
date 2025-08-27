@@ -82,7 +82,6 @@ include_dirs = [
     'extern/osqp/lin_sys/direct/qdldl/qdldl_sources/include',
     'extern/osqp/lin_sys/direct/qdldl/amd/include',
     'extern/qpoases/include',
-    'extern/pybind11/include',
 ]
 
 try:
@@ -209,7 +208,8 @@ setup(
     platforms='any',
     keywords=['robotics', 'control', 'physics simulation'],
     install_requires=[
-        'numpy'
+        'numpy',
+        'pybind11>=2.10.0'  # Add this line
     ],
     ext_modules=extensions,
     packages=[x for x in find_packages('.')],
