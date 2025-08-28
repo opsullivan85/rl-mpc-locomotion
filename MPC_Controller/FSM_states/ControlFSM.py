@@ -26,6 +26,7 @@ class FSM_StatesList:
 
 class ControlFSM:
     def __init__(self,
+                 dt: float,
                  _quadruped:Quadruped,
                  _stateEstimator:StateEstimator,
                  _legController:LegController,
@@ -39,7 +40,7 @@ class ControlFSM:
         self.statesList = FSM_StatesList()
         self.statesList.invalid = None
         self.statesList.passive = FSM_State_Passive(self.data)
-        self.statesList.locomotion = FSM_State_Locomotion(self.data)
+        self.statesList.locomotion = FSM_State_Locomotion(self.data, dt=dt)
         self.statesList.recoveryStand = FSM_State_RecoveyrStand(self.data)
 
         # FSM state information

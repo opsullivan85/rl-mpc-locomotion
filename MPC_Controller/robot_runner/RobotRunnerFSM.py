@@ -10,7 +10,7 @@ class RobotRunnerFSM:
         # self._iterations = 0
 
 
-    def init(self, robotType:RobotType):
+    def init(self, robotType:RobotType, dt: float):
         """
         Initializes the robot model, state estimator, leg controller,
         robot data, and any control logic specific data.
@@ -19,11 +19,7 @@ class RobotRunnerFSM:
 
         # print("[RobotRunner] initialize")
 
-        # init quadruped
-        if self.robotType in RobotType:
-            self._quadruped = Quadruped(self.robotType)
-        else:
-            raise Exception("Invalid RobotType")
+        self._quadruped = Quadruped(self.robotType)
 
         # init leg controller
         self._legController = LegController(self._quadruped)
@@ -35,7 +31,7 @@ class RobotRunnerFSM:
         self._desiredStateCommand = DesiredStateCommand()
         
         # Controller initializations
-        self._controlFSM = ControlFSM(self._quadruped, 
+        self._controlFSM = ControlFSM(dt, self._quadruped, 
                                       self._stateEstimator, 
                                       self._legController,
                                       self._desiredStateCommand)

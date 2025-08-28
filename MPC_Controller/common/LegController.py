@@ -68,7 +68,6 @@ class LegController:
         self.commands = [LegControllerCommand() for _ in range(4)]
         self.datas = [LegControllerData() for _ in range(4)]
         # self._legsEnabled = False
-        self._maxTorque = 0.0
 
         self._quadruped = quad
         for data in self.datas:
@@ -82,9 +81,6 @@ class LegController:
         """
         for cmd in self.commands:
             cmd.zero()
-
-    def setMaxTorque(self, tau:float):
-        self._maxTorque = tau     
 
     def updateData(self, dof_states):
         """

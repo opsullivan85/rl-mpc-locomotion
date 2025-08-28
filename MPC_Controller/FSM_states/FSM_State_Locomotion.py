@@ -14,11 +14,11 @@ class FSM_State_Locomotion(FSM_State):
     * and handles calling the interfaces to the controllers. This state
     * should be independent of controller, gait, and desired trajectory.
     """
-    def __init__(self, _controlFSMData:ControlFSMData):
+    def __init__(self, _controlFSMData:ControlFSMData, dt: float):
         super().__init__(_controlFSMData, FSM_StateName.LOCOMOTION, "LOCOMOTION")
 
-        self.cMPC = ConvexMPCLocomotion(Parameters.controller_dt,
-                27/(1000.0*Parameters.controller_dt))
+        self.cMPC = ConvexMPCLocomotion(dt,
+                int(27/(1000.0*dt)))
         self.turnOnAllSafetyChecks()
 
         # Turn off Foot pos command since it is set in WBC as operational task
