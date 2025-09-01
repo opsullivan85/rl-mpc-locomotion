@@ -18,7 +18,7 @@ class FSM_State_Locomotion(FSM_State):
         super().__init__(_controlFSMData, FSM_StateName.LOCOMOTION, "LOCOMOTION")
 
         self.cMPC = ConvexMPCLocomotion(dt,
-                int(27/(1000.0*dt)))
+                _iterationsBetweenMPC=1)
         self.turnOnAllSafetyChecks()
 
         # Turn off Foot pos command since it is set in WBC as operational task

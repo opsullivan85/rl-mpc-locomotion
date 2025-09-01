@@ -27,33 +27,33 @@ class ConvexMPCLocomotion:
         self.horizonLength = 10 # a fixed number for all mpc gait
         self.dt = _dt
         
-        self.trotting = OffsetDurationGait(10, 
-                            np.array([0, 5, 5, 0], dtype=DTYPE), 
-                            np.array([5, 5, 5, 5], dtype=DTYPE), "Trotting")
+        self.trotting = OffsetDurationGait(10*3,
+                            np.array([0*3, 5*3, 5*3, 0*3], dtype=DTYPE), 
+                            np.array([5*3, 5*3, 5*3, 5*3], dtype=DTYPE), "Trotting")
         
-        self.bounding = OffsetDurationGait(10,
-                            np.array([5, 5, 0, 0], dtype=DTYPE), 
-                            np.array([4, 4, 4, 4], dtype=DTYPE), "Bounding")
+        self.bounding = OffsetDurationGait(10*3,
+                            np.array([5*3, 5*3, 0*3, 0*3], dtype=DTYPE), 
+                            np.array([4*3, 4*3, 4*3, 4*3], dtype=DTYPE), "Bounding")
         
-        self.pronking = OffsetDurationGait(10,
-                            np.array([0, 0, 0, 0], dtype=DTYPE), 
-                            np.array([4, 4, 4, 4], dtype=DTYPE), "Pronking")
+        self.pronking = OffsetDurationGait(10*3,
+                            np.array([0*3, 0*3, 0*3, 0*3], dtype=DTYPE), 
+                            np.array([4*3, 4*3, 4*3, 4*3], dtype=DTYPE), "Pronking")
 
-        self.pacing = OffsetDurationGait(10,
-                            np.array([5, 0, 5, 0], dtype=DTYPE), 
-                            np.array([5, 5, 5, 5], dtype=DTYPE), "Pacing")
+        self.pacing = OffsetDurationGait(10*3,
+                            np.array([5*3, 0*3, 5*3, 0*3], dtype=DTYPE), 
+                            np.array([5*3, 5*3, 5*3, 5*3], dtype=DTYPE), "Pacing")
 
-        self.galloping = OffsetDurationGait(10,
-                            np.array([0, 2, 7, 9], dtype=DTYPE), 
-                            np.array([4, 4, 4, 4], dtype=DTYPE), "Galloping")
+        self.galloping = OffsetDurationGait(10*3,
+                            np.array([0*3, 2*3, 7*3, 9*3], dtype=DTYPE), 
+                            np.array([4*3, 4*3, 4*3, 4*3], dtype=DTYPE), "Galloping")
 
-        self.walking = OffsetDurationGait(10,
-                            np.array([0, 3, 5, 8], dtype=DTYPE), 
-                            np.array([5, 5, 5, 5], dtype=DTYPE), "Walking")
+        self.walking = OffsetDurationGait(10*3,
+                            np.array([0*3, 3*3, 5*3, 8*3], dtype=DTYPE), 
+                            np.array([5*3, 5*3, 5*3, 5*3], dtype=DTYPE), "Walking")
 
-        self.trotRunning = OffsetDurationGait(10,
-                            np.array([0, 5, 5, 0], dtype=DTYPE), 
-                            np.array([4, 4, 4, 4], dtype=DTYPE), "Trot Running")
+        self.trotRunning = OffsetDurationGait(10*3,
+                            np.array([0*3, 5*3, 5*3, 0*3], dtype=DTYPE), 
+                            np.array([4*3, 4*3, 4*3, 4*3], dtype=DTYPE), "Trot Running")
 
         self.dtMPC = self.dt * self.iterationsBetweenMPC
         self.default_iterations_between_mpc = self.iterationsBetweenMPC
