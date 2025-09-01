@@ -19,7 +19,7 @@ class Parameters:
 
     bridge_MPC_to_RL = True
 
-    flat_ground = False
+    flat_ground = True
 
     # * [-1, 1] -> [a, b] => [-1, 1] * (b-a)/2 + (b+a)/2
     MPC_param_scale = [4, 4, 4,     # 1-9
@@ -41,7 +41,7 @@ class Parameters:
         operatingMode = FSM_OperatingMode.NORMAL # 0 no transition and safe check, 1 normal
         FSM_check_safety = True
     
-    controller_dt = 0.01 # in sec
+    controller_dt = 0.005 # in sec
 
     locomotionUnsafe = False # global indicator for switching contorl mode
     # FSM_check_safety = False
