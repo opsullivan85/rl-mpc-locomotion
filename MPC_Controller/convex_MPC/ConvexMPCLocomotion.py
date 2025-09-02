@@ -22,10 +22,10 @@ except:
     sys.exit()
 
 class ConvexMPCLocomotion:
-    def __init__(self, _dt:float, _iterationsBetweenMPC:int):
-        self.iterationsBetweenMPC = int(_iterationsBetweenMPC)
-        self.horizonLength = 10 # a fixed number for all mpc gait
-        self.dt = _dt
+    def __init__(self, dt:float, iterations_between_mpc:int):
+        self.iterations_between_mpc = int(iterations_between_mpc)
+        self.horizon_length = 10 # a fixed number for all mpc gait
+        self.dt = dt
         
         self.trotting = OffsetDurationGait(10*3,
                             np.array([0*3, 5*3, 5*3, 0*3], dtype=DTYPE), 
@@ -51,38 +51,38 @@ class ConvexMPCLocomotion:
                             np.array([0*3, 3*3, 5*3, 8*3], dtype=DTYPE), 
                             np.array([5*3, 5*3, 5*3, 5*3], dtype=DTYPE), "Walking")
 
-        self.trotRunning = OffsetDurationGait(10*3,
+        self.trot_running = OffsetDurationGait(10*3,
                             np.array([0*3, 5*3, 5*3, 0*3], dtype=DTYPE), 
                             np.array([4*3, 4*3, 4*3, 4*3], dtype=DTYPE), "Trot Running")
 
-        self.dtMPC = self.dt * self.iterationsBetweenMPC
-        self.default_iterations_between_mpc = self.iterationsBetweenMPC
-        print("[Convex MPC] dt: %.3f iterations: %d, dtMPC: %.3f" % (self.dt, self.iterationsBetweenMPC, self.dtMPC))
+        self.mpc_dt = self.dt * self.iterations_between_mpc
+        self.default_iterations_between_mpc = self.iterations_between_mpc
+        print("[Convex MPC] dt: %.3f iterations: %d, dtMPC: %.3f" % (self.dt, self.iterations_between_mpc, self.mpc_dt))
         
-        self.firstSwing:list = None
-        self.firstRun = True
-        self.iterationCounter = 0
-        self.pFoot = np.zeros((4,3,1), dtype=DTYPE)
-        self.f_ff = np.zeros((4,3,1), dtype=DTYPE)
+        self.first_swing_flags = [True, True, True, True]
+        self.is_first_run = True
+        self.iteration_counter = 0
+        self.foot_positions_global = np.zeros((4,3,1), dtype=DTYPE)
+        self.feedforward_forces = np.zeros((4,3,1), dtype=DTYPE)
 
-        self.foot_positions = np.zeros((4,3,1), dtype=DTYPE)
+        self.foot_positions_body_frame = np.zeros((4,3,1), dtype=DTYPE)
 
         self.current_gait = 0
-        self._x_vel_des = 0.0
-        self._y_vel_des = 0.0
-        self._yaw_turn_rate = 0.0
+        self.desired_x_velocity = 0.0
+        self.desired_y_velocity = 0.0
+        self.desired_yaw_rate = 0.0
 
-        self._roll_des = 0.0
-        self._pitch_des = 0.0
+        self.desired_roll = 0.0
+        self.desired_pitch = 0.0
 
-        self.footSwingTrajectories = [FootSwingTrajectory() for _ in range(4)]
-        self.swingTimes = np.zeros((4,1), dtype=DTYPE)
-        self.swingTimeRemaining = [0.0 for _ in range(4)]
+        self.foot_swing_trajectories = [FootSwingTrajectory() for _ in range(4)]
+        self.swing_times = np.zeros((4,1), dtype=DTYPE)
+        self.swing_time_remaining = [0.0 for _ in range(4)]
 
-        self.Kp = np.array([700, 0, 0, 0, 700, 0, 0, 0, 150], dtype=DTYPE).reshape((3,3))
-        self.Kd = np.array([7, 0, 0, 0, 7, 0, 0, 0, 7], dtype=DTYPE).reshape((3,3))
-        self.Kp_stance = np.zeros_like(self.Kp)
-        self.Kd_stance = self.Kd
+        self.kp_swing = np.array([700, 0, 0, 0, 700, 0, 0, 0, 150], dtype=DTYPE).reshape((3,3))
+        self.kd_swing = np.array([7, 0, 0, 0, 7, 0, 0, 0, 7], dtype=DTYPE).reshape((3,3))
+        self.kp_stance = np.zeros_like(self.kp_swing)
+        self.kd_stance = self.kd_swing
 
         self.logger = Logger("logs/")
  
@@ -98,35 +98,35 @@ class ConvexMPCLocomotion:
             # start new logs
             self.logger.start_logging()
 
-        self.iterationCounter = 0
+        self.iteration_counter = 0
         self._cpp_mpc = mpc.ConvexMpc(data._quadruped._bodyMass, 
                             list(data._quadruped._bodyInertia),
                             NUM_LEGS,
-                            self.horizonLength,
-                            self.dtMPC,
+                            self.horizon_length,
+                            self.mpc_dt,
                             Parameters.cmpc_alpha,
                             mpc.QPOASES)
 
-        self._x_vel_des = 0.0
-        self._y_vel_des = 0.0
-        self._yaw_turn_rate = 0.0
-        self.firstSwing = [True for _ in range(4)]
-        self.firstRun = True
+        self.desired_x_velocity = 0.0
+        self.desired_y_velocity = 0.0
+        self.desired_yaw_rate = 0.0
+        self.first_swing_flags = [True for _ in range(4)]
+        self.is_first_run = True
 
-    def recomputerTiming(self, iterations_per_mpc:int):
-        self.iterationsBetweenMPC = iterations_per_mpc
-        self.dtMPC = self.dt*iterations_per_mpc
+    def recompute_timing(self, iterations_per_mpc:int):
+        self.iterations_between_mpc = iterations_per_mpc
+        self.mpc_dt = self.dt*iterations_per_mpc
 
-    def __SetupCommand(self, data:ControlFSMData):
+    def setup_command(self, data:ControlFSMData):
 
-        self._body_height = data._quadruped._bodyHeight
-        self._x_vel_des = data._desiredStateCommand.x_vel_cmd
-        self._y_vel_des = data._desiredStateCommand.y_vel_cmd
+        self.body_height = data._quadruped._bodyHeight
+        self.desired_x_velocity = data._desiredStateCommand.x_vel_cmd
+        self.desired_y_velocity = data._desiredStateCommand.y_vel_cmd
 
-        self._yaw_turn_rate = data._desiredStateCommand.yaw_turn_rate
+        self.desired_yaw_rate = data._desiredStateCommand.yaw_turn_rate
 
-    def solveDenseMPC(self, mpcTable:list, data:ControlFSMData):
-        seResult = data._stateEstimator.getResult()
+    def solve_dense_mpc(self, mpc_table:list, data:ControlFSMData):
+        state_estimator_result = data._stateEstimator.getResult()
         
         # *MPC Weights
         if data._desiredStateCommand.mpc_weights is None:
@@ -140,19 +140,19 @@ class ConvexMPCLocomotion:
         if Parameters.flat_ground:
             gravity_projection_vec = np.array([0, 0, 1],dtype=DTYPE)
         else:
-            gravity_projection_vec = seResult.ground_normal_yaw
+            gravity_projection_vec = state_estimator_result.ground_normal_yaw
         
         # *Google's way of states
-        com_roll_pitch_yaw = seResult.rpyBody.flatten()
-        # com_roll_pitch_yaw = np.array([seResult.rpyBody[0], seResult.rpyBody[1], 0], dtype=DTYPE)
-        com_position = seResult.position.flatten()
-        com_angular_velocity = seResult.omegaBody.flatten()
-        com_velocity = seResult.vBody.flatten()
+        com_roll_pitch_yaw = state_estimator_result.rpyBody.flatten()
+        # com_roll_pitch_yaw = np.array([state_estimator_result.rpyBody[0], state_estimator_result.rpyBody[1], 0], dtype=DTYPE)
+        com_position = state_estimator_result.position.flatten()
+        com_angular_velocity = state_estimator_result.omegaBody.flatten()
+        com_velocity = state_estimator_result.vBody.flatten()
 
-        desired_com_position = np.array([0., 0., self._body_height], dtype=DTYPE)
-        desired_com_velocity = np.array([self._x_vel_des, self._y_vel_des, 0], dtype=DTYPE)
+        desired_com_position = np.array([0., 0., self.body_height], dtype=DTYPE)
+        desired_com_velocity = np.array([self.desired_x_velocity, self.desired_y_velocity, 0], dtype=DTYPE)
         desired_com_roll_pitch_yaw = np.zeros(3, dtype=DTYPE) # walk parallel to the ground
-        desired_com_angular_velocity = np.array([0, 0, self._yaw_turn_rate], dtype=DTYPE)
+        desired_com_angular_velocity = np.array([0, 0, self.desired_yaw_rate], dtype=DTYPE)
 
         if Parameters.cmpc_print_states:
             print("------------------------------------------")
@@ -175,8 +175,8 @@ class ConvexMPCLocomotion:
             com_roll_pitch_yaw, # com_roll_pitch_yaw (set yaw to 0.0)
             gravity_projection_vec,  # Normal Vector of ground
             com_angular_velocity, # com_angular_velocity
-            np.asarray(mpcTable, dtype=DTYPE),  # Foot contact states
-            np.array(self.foot_positions.flatten(), dtype=DTYPE),  # foot_positions_base_frame
+            np.asarray(mpc_table, dtype=DTYPE),  # Foot contact states
+            np.array(self.foot_positions_body_frame.flatten(), dtype=DTYPE),  # foot_positions_base_frame
             data._quadruped._friction_coeffs,  # foot_friction_coeffs
             desired_com_position,  # desired_com_position
             desired_com_velocity,  # desired_com_velocity
@@ -184,7 +184,7 @@ class ConvexMPCLocomotion:
             desired_com_angular_velocity  # desired_com_angular_velocity
             )
         for leg in range(4):
-            self.f_ff[leg] = np.array(predicted_contact_forces[leg*3: (leg+1)*3],dtype=DTYPE).reshape((3,1))
+            self.feedforward_forces[leg] = np.array(predicted_contact_forces[leg*3: (leg+1)*3],dtype=DTYPE).reshape((3,1))
 
         if Parameters.cmpc_print_update_time:
             print("MPC Update Time %.3f s\n"%(time.time()-timer))
@@ -210,169 +210,169 @@ class ConvexMPCLocomotion:
                 MPC_GRF = predicted_contact_forces[:12], # MPC_GRF
                 MPC_LOS = mpc_state_loss+mpc_torque_loss, # MPC_LOS
                 MPC_WEI = mpc_weight, # MPC_WEI
-                TIM_STA = self.iterationCounter # TIM_STA
+                TIM_STA = self.iteration_counter # TIM_STA
             )
             self.logger.update_logging(log_data_frame)
 
-    def updateMPCIfNeeded(self, mpcTable:list, data:ControlFSMData):
-        # self.solveDenseMPC(mpcTable, data)
-        if(self.iterationCounter%self.iterationsBetweenMPC)==0:
-            self.solveDenseMPC(mpcTable, data)
+    def update_mpc_if_needed(self, mpc_table:list, data:ControlFSMData):
+        # self.solve_dense_mpc(mpc_table, data)
+        if(self.iteration_counter%self.iterations_between_mpc)==0:
+            self.solve_dense_mpc(mpc_table, data)
 
     def run(self, data:ControlFSMData):
         # Command Setup
-        self.__SetupCommand(data)
-        gaitNumber = Parameters.cmpc_gait.value
-        seResult = data._stateEstimator.getResult()
+        self.setup_command(data)
+        gait_number = Parameters.cmpc_gait.value
+        state_estimator_result = data._stateEstimator.getResult()
 
         # pick gait
         gait = self.trotting
-        if gaitNumber == 1:
+        if gait_number == 1:
             gait = self.bounding
-        elif gaitNumber == 2:
+        elif gait_number == 2:
             gait = self.pronking
-        elif gaitNumber == 3:
+        elif gait_number == 3:
             gait = self.pacing
-        elif gaitNumber == 5:
+        elif gait_number == 5:
             gait = self.galloping
-        elif gaitNumber == 6:
+        elif gait_number == 6:
             gait = self.walking
-        elif gaitNumber == 7:
-            gait = self.trotRunning
+        elif gait_number == 7:
+            gait = self.trot_running
 
-        self.current_gait = gaitNumber
-        gait.setIterations(self.iterationsBetweenMPC, self.iterationCounter)
+        self.current_gait = gait_number
+        gait.setIterations(self.iterations_between_mpc, self.iteration_counter)
 
-        self.recomputerTiming(self.default_iterations_between_mpc)
+        self.recompute_timing(self.default_iterations_between_mpc)
 
         for i in range(4):
-            self.foot_positions[i] = data._quadruped.getHipLocation(i) + data._legController.datas[i].p
-            self.pFoot[i] = self.foot_positions[i] + seResult.position
-            # np.copyto(self.pFoot[i], seResult.position + \
+            self.foot_positions_body_frame[i] = data._quadruped.getHipLocation(i) + data._legController.datas[i].p
+            self.foot_positions_global[i] = self.foot_positions_body_frame[i] + state_estimator_result.position
+            # np.copyto(self.foot_positions_global[i], state_estimator_result.position + \
                                         # (data._quadruped.getHipLocation(i)+
                                         # data._legController.datas[i].p))
-        # self.foot_positions = np.array([self.pFoot[i] - seResult.position for i in range(4)], dtype=DTYPE).reshape((4,3,1))
+        # self.foot_positions_body_frame = np.array([self.foot_positions_global[i] - state_estimator_result.position for i in range(4)], dtype=DTYPE).reshape((4,3,1))
 
         # * first time initialization
-        if self.firstRun:
-            self.firstRun = False
-            data._stateEstimator._init_contact_history(self.foot_positions)
+        if self.is_first_run:
+            self.is_first_run = False
+            data._stateEstimator._init_contact_history(self.foot_positions_body_frame)
             for i in range(4):
-                self.footSwingTrajectories[i].setHeight(0.05)
-                self.footSwingTrajectories[i].setInitialPosition(self.pFoot[i])
-                self.footSwingTrajectories[i].setFinalPosition(self.pFoot[i])
+                self.foot_swing_trajectories[i].setHeight(0.05)
+                self.foot_swing_trajectories[i].setInitialPosition(self.foot_positions_global[i])
+                self.foot_swing_trajectories[i].setFinalPosition(self.foot_positions_global[i])
 
         if Parameters.flat_ground:
-            data._stateEstimator._update_com_position_ground_frame(self.foot_positions)
+            data._stateEstimator._update_com_position_ground_frame(self.foot_positions_body_frame)
         else:
-            data._stateEstimator._compute_ground_normal_and_com_position(self.foot_positions)
+            data._stateEstimator._compute_ground_normal_and_com_position(self.foot_positions_body_frame)
         
 
         # * foot placement
-        for l in range(4):
-            self.swingTimes[l] = gait.getCurrentSwingTime(self.dtMPC, l)
+        for leg_idx in range(4):
+            self.swing_times[leg_idx] = gait.getCurrentSwingTime(self.mpc_dt, leg_idx)
 
-        v_des_robot = np.array([self._x_vel_des, self._y_vel_des, 0], dtype=DTYPE).reshape((3,1))
+        desired_velocity_robot_frame = np.array([self.desired_x_velocity, self.desired_y_velocity, 0], dtype=DTYPE).reshape((3,1))
         # interleave_y = [0.08, -0.08, -0.02, 0.02]
         # interleave_gain = -0.2
-        # v_abs = math.fabs(v_des_robot[0])
+        # v_abs = math.fabs(desired_velocity_robot_frame[0])
 
         for i in range(4):
-            if self.firstSwing[i]:
-                self.swingTimeRemaining[i] = self.swingTimes[i].item()
+            if self.first_swing_flags[i]:
+                self.swing_time_remaining[i] = self.swing_times[i].item()
             else:
-                self.swingTimeRemaining[i] -= self.dt
+                self.swing_time_remaining[i] -= self.dt
 
-            # self.footSwingTrajectories[i].setHeight(0.2)
-            self.footSwingTrajectories[i].setHeight(self._body_height/3)
+            # self.foot_swing_trajectories[i].setHeight(0.2)
+            self.foot_swing_trajectories[i].setHeight(self.body_height/3)
             
-            offset = np.array([0, getSideSign(i)*data._quadruped._abadLinkLength, 0], dtype=DTYPE).reshape((3,1))
-            pRobotFrame = data._quadruped.getHipLocation(i) + offset
-            # pRobotFrame[1] += interleave_y[i] * v_abs * interleave_gain
-            stance_time = gait.getCurrentStanceTime(self.dtMPC, i)
-            pYawCorrected = coordinateRotation(CoordinateAxis.Z, -self._yaw_turn_rate*stance_time/2) @ pRobotFrame
+            hip_offset = np.array([0, getSideSign(i)*data._quadruped._abadLinkLength, 0], dtype=DTYPE).reshape((3,1))
+            foot_position_robot_frame = data._quadruped.getHipLocation(i) + hip_offset
+            # foot_position_robot_frame[1] += interleave_y[i] * v_abs * interleave_gain
+            stance_time = gait.getCurrentStanceTime(self.mpc_dt, i)
+            foot_position_yaw_corrected = coordinateRotation(CoordinateAxis.Z, -self.desired_yaw_rate*stance_time/2) @ foot_position_robot_frame
 
-            Pf = seResult.position + (pYawCorrected + v_des_robot * self.swingTimeRemaining[i])
+            foot_position_global = state_estimator_result.position + (foot_position_yaw_corrected + desired_velocity_robot_frame * self.swing_time_remaining[i])
 
-            p_rel_max = 0.3
-            pfx_rel = seResult.vBody[0] * (0.5 + Parameters.cmpc_bonus_swing) * stance_time + \
-                      0.03 * (seResult.vBody[0] - v_des_robot[0]) + \
-                      (0.5 * seResult.position[2] / 9.81) * (seResult.vBody[1] * self._yaw_turn_rate)
+            max_relative_position = 0.3
+            foot_x_offset_relative = state_estimator_result.vBody[0] * (0.5 + Parameters.cmpc_bonus_swing) * stance_time + \
+                      0.03 * (state_estimator_result.vBody[0] - desired_velocity_robot_frame[0]) + \
+                      (0.5 * state_estimator_result.position[2] / 9.81) * (state_estimator_result.vBody[1] * self.desired_yaw_rate)
             
-            pfy_rel = seResult.vBody[1] * 0.5 * stance_time * self.dtMPC + \
-                      0.03 * (seResult.vBody[1] - v_des_robot[1]) + \
-                      (0.5 * seResult.position[2] / 9.81) * (-seResult.vBody[0] * self._yaw_turn_rate)
+            foot_y_offset_relative = state_estimator_result.vBody[1] * 0.5 * stance_time * self.mpc_dt + \
+                      0.03 * (state_estimator_result.vBody[1] - desired_velocity_robot_frame[1]) + \
+                      (0.5 * state_estimator_result.position[2] / 9.81) * (-state_estimator_result.vBody[0] * self.desired_yaw_rate)
             
-            pfx_rel = min(max(pfx_rel, -p_rel_max), p_rel_max)
-            pfy_rel = min(max(pfy_rel, -p_rel_max), p_rel_max)
-            Pf[0] += pfx_rel
-            Pf[1] += pfy_rel
-            Pf[2] = -0.003
-            self.footSwingTrajectories[i].setFinalPosition(Pf)
+            foot_x_offset_relative = min(max(foot_x_offset_relative, -max_relative_position), max_relative_position)
+            foot_y_offset_relative = min(max(foot_y_offset_relative, -max_relative_position), max_relative_position)
+            foot_position_global[0] += foot_x_offset_relative
+            foot_position_global[1] += foot_y_offset_relative
+            foot_position_global[2] = -0.003
+            self.foot_swing_trajectories[i].setFinalPosition(foot_position_global)
 
         # calc gait
-        self.iterationCounter += 1
+        self.iteration_counter += 1
 
         # gait
-        contactStates = gait.getContactState()
-        swingStates = gait.getSwingState()
-        mpcTable = gait.getMpcTable()
+        contact_states = gait.getContactState()
+        swing_states = gait.getSwingState()
+        mpc_table = gait.getMpcTable()
 
         # * update MPC
-        self.updateMPCIfNeeded(mpcTable, data)
+        self.update_mpc_if_needed(mpc_table, data)
 
-        se_contactState = np.array([0,0,0,0], dtype=DTYPE).reshape((4,1))
+        state_estimator_contact_state = np.array([0,0,0,0], dtype=DTYPE).reshape((4,1))
 
         for foot in range(4):
-            contactState = contactStates[foot]
-            swingState = swingStates[foot]
-            if swingState > 0: #* foot is in swing
-                if self.firstSwing[foot]:
-                    self.firstSwing[foot] = False
-                    self.footSwingTrajectories[foot].setInitialPosition(self.pFoot[foot])
+            contact_state = contact_states[foot]
+            swing_state = swing_states[foot]
+            if swing_state > 0: #* foot is in swing
+                if self.first_swing_flags[foot]:
+                    self.first_swing_flags[foot] = False
+                    self.foot_swing_trajectories[foot].setInitialPosition(self.foot_positions_global[foot])
 
-                self.footSwingTrajectories[foot].computeSwingTrajectoryBezier(swingState, self.swingTimes[foot].item())
-                pDesFoot = self.footSwingTrajectories[foot].getPosition()
-                vDesFoot = self.footSwingTrajectories[foot].getVelocity()
+                self.foot_swing_trajectories[foot].computeSwingTrajectoryBezier(swing_state, self.swing_times[foot].item())
+                desired_foot_position_global = self.foot_swing_trajectories[foot].getPosition()
+                desired_foot_velocity_global = self.foot_swing_trajectories[foot].getVelocity()
 
-                pDesLeg = (pDesFoot - seResult.position) \
+                desired_leg_position = (desired_foot_position_global - state_estimator_result.position) \
                           - data._quadruped.getHipLocation(foot)
-                vDesLeg = (vDesFoot - seResult.vBody)
+                desired_leg_velocity = (desired_foot_velocity_global - state_estimator_result.vBody)
 
-                # data._legController.commands[foot].pDes = pDesLeg
-                # data._legController.commands[foot].vDes = vDesLeg
-                # data._legController.commands[foot].kpCartesian = self.Kp
-                # data._legController.commands[foot].kdCartesian = self.Kd
+                # data._legController.commands[foot].pDes = desired_leg_position
+                # data._legController.commands[foot].vDes = desired_leg_velocity
+                # data._legController.commands[foot].kpCartesian = self.position_gains_swing
+                # data._legController.commands[foot].kdCartesian = self.damping_gains_swing
 
-                np.copyto(data._legController.commands[foot].pDes, pDesLeg, casting=CASTING)
-                np.copyto(data._legController.commands[foot].vDes, vDesLeg, casting=CASTING)
-                np.copyto(data._legController.commands[foot].kpCartesian, self.Kp, casting=CASTING)
-                np.copyto(data._legController.commands[foot].kdCartesian, self.Kd, casting=CASTING)
+                np.copyto(data._legController.commands[foot].pDes, desired_leg_position, casting=CASTING)
+                np.copyto(data._legController.commands[foot].vDes, desired_leg_velocity, casting=CASTING)
+                np.copyto(data._legController.commands[foot].kpCartesian, self.kp_swing, casting=CASTING)
+                np.copyto(data._legController.commands[foot].kdCartesian, self.kd_swing, casting=CASTING)
 
             else: #* foot is in stance
-                self.firstSwing[foot] = True
-                pDesFoot = self.footSwingTrajectories[foot].getPosition()
-                vDesFoot = self.footSwingTrajectories[foot].getVelocity()
+                self.first_swing_flags[foot] = True
+                desired_foot_position_global = self.foot_swing_trajectories[foot].getPosition()
+                desired_foot_velocity_global = self.foot_swing_trajectories[foot].getVelocity()
 
-                pDesLeg = (pDesFoot - seResult.position) \
+                desired_leg_position = (desired_foot_position_global - state_estimator_result.position) \
                           - data._quadruped.getHipLocation(foot)
-                vDesLeg = (vDesFoot - seResult.vBody)
+                desired_leg_velocity = (desired_foot_velocity_global - state_estimator_result.vBody)
                 
-                # data._legController.commands[foot].pDes = pDesLeg
-                # data._legController.commands[foot].vDes = vDesLeg
-                # data._legController.commands[foot].kpCartesian = self.Kp_stance
-                # data._legController.commands[foot].kdCartesian = self.Kd_stance
+                # data._legController.commands[foot].pDes = desired_leg_position
+                # data._legController.commands[foot].vDes = desired_leg_velocity
+                # data._legController.commands[foot].kpCartesian = self.position_gains_stance
+                # data._legController.commands[foot].kdCartesian = self.damping_gains_stance
 
-                # data._legController.commands[foot].forceFeedForward = self.f_ff[foot]
+                # data._legController.commands[foot].forceFeedForward = self.feedforward_forces[foot]
                 # data._legController.commands[foot].kdJoint = np.identity(3, dtype=DTYPE)*0.2
 
-                np.copyto(data._legController.commands[foot].pDes, pDesLeg, casting=CASTING)
-                np.copyto(data._legController.commands[foot].vDes, vDesLeg, casting=CASTING)
-                np.copyto(data._legController.commands[foot].kpCartesian, self.Kp_stance, casting=CASTING)
-                np.copyto(data._legController.commands[foot].kdCartesian, self.Kd_stance, casting=CASTING)
-                np.copyto(data._legController.commands[foot].forceFeedForward, self.f_ff[foot], casting=CASTING)
+                np.copyto(data._legController.commands[foot].pDes, desired_leg_position, casting=CASTING)
+                np.copyto(data._legController.commands[foot].vDes, desired_leg_velocity, casting=CASTING)
+                np.copyto(data._legController.commands[foot].kpCartesian, self.kp_stance, casting=CASTING)
+                np.copyto(data._legController.commands[foot].kdCartesian, self.kd_stance, casting=CASTING)
+                np.copyto(data._legController.commands[foot].forceFeedForward, self.feedforward_forces[foot], casting=CASTING)
                 np.copyto(data._legController.commands[foot].kdJoint, np.identity(3, dtype=DTYPE)*0.2, casting=CASTING)
 
-                se_contactState[foot] = contactState
+                state_estimator_contact_state[foot] = contact_state
 
-        data._stateEstimator.setContactPhase(se_contactState)
+        data._stateEstimator.setContactPhase(state_estimator_contact_state)
