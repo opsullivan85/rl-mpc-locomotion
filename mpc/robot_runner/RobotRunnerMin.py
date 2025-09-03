@@ -1,13 +1,13 @@
 from src.control.mpc.common.DesiredStateCommand import DesiredStateCommand
 from src.control.mpc.FSM_states.ControlFSMData import ControlFSMData
-from src.control.mpc.Parameters import Parameters
 from src.control.mpc.common.Quadruped import Quadruped, RobotType
 from src.control.mpc.common.LegController import LegController
 from src.control.mpc.common.StateEstimator import StateEstimator
-from src.control.mpc.convex_MPC.ConvexMPCLocomotion import ConvexMPCLocomotion
+from src.control.mpc.convex_MPC.SpecifiedFootstepLocomotion import SpecifiedFootstepLocomotion
 from nptyping import NDArray, Float32, Shape
 
 from typing import TYPE_CHECKING
+
 
 if TYPE_CHECKING:
     import numpy as np
@@ -25,7 +25,7 @@ class RobotRunnerMin:
         self.robotType = robotType
 
         # TODO tune these parameters
-        self.cMPC = ConvexMPCLocomotion(dt, 1)
+        self.cMPC = SpecifiedFootstepLocomotion(dt, 1)
 
         # init quadruped
         self._quadruped = Quadruped(self.robotType)

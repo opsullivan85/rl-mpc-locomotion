@@ -234,7 +234,7 @@ class CalculatedGait(GaitABC):
     ) -> None:
         self.swing_start_times = np.zeros((4, 1), dtype=np.float32)
         """Start time of each active swing phase"""
-        self.swing_durations = np.zeros((4, 1), dtype=np.float32)
+        self.swing_durations = np.full((4, 1), 0.2, dtype=np.float32)
         """Total duration of each active swing phase"""
         self.controller_dt = controller_dt
         """Time step per iteration"""

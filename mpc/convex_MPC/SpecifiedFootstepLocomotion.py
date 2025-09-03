@@ -1,5 +1,5 @@
-from mpc.common.StateEstimator import StateEstimate
-from mpc.convex_MPC.Gait import CalculatedGait
+from src.control.mpc.common.StateEstimator import StateEstimate
+from src.control.mpc.convex_MPC.Gait import CalculatedGait
 from src.control.mpc.FSM_states.ControlFSMData import ControlFSMData
 from src.control.mpc.convex_MPC.Gait import GaitABC
 from src.control.mpc.math_utils.orientation_tools import rpy_to_rot
@@ -12,7 +12,18 @@ from nptyping import NDArray, Float32, Shape
 class SpecifiedFootstepLocomotion(ConvexMPCLocomotion):
     def __init__(self, dt: float, iterations_between_mpc: int):
         super().__init__(dt, iterations_between_mpc)
-        self.footstep_locations_hip = np.zeros((4, 2), dtype=DTYPE)
+        # self.footstep_locations_hip = np.zeros((4, 2), dtype=DTYPE)
+        # offset nominal stance so feet are out to the sides and further
+        # out from the robot front and back
+        _side_offset = 0.07
+        _front_back_offset = 0.02
+        self.footstep_locations_hip = np.asarray([
+            [-_side_offset, _front_back_offset],   # Front Right
+            [_side_offset, _front_back_offset],    # Front Left
+            [-_side_offset, -_front_back_offset],  # Rear Right
+            [_side_offset, -_front_back_offset]    # Rear Left
+        ])
+
         """Four feet, desired x, y positions in respective hip frames
         """
         
@@ -56,7 +67,7 @@ class SpecifiedFootstepLocomotion(ConvexMPCLocomotion):
             # assuming the body frame has this height in the world frame
             # there will be some sin error if the body is not horizontal
             # but that should be minimal
-            -state_estimator_result.position[2]
+            -state_estimator_result.position[2,0]
         ], dtype=DTYPE).reshape((3, 1))
 
         # Transform from hip frame to global frame
