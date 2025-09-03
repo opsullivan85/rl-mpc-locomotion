@@ -1,8 +1,8 @@
-from src.control.MPC_Controller.common.DesiredStateCommand import DesiredStateCommand
-from src.control.MPC_Controller.FSM_states.ControlFSM import ControlFSM
-from src.control.MPC_Controller.common.Quadruped import Quadruped, RobotType
-from src.control.MPC_Controller.common.LegController import LegController
-from src.control.MPC_Controller.common.StateEstimator import StateEstimator
+from src.control.mpc.common.DesiredStateCommand import DesiredStateCommand
+from src.control.mpc.FSM_states.ControlFSM import ControlFSM
+from src.control.mpc.common.Quadruped import Quadruped, RobotType
+from src.control.mpc.common.LegController import LegController
+from src.control.mpc.common.StateEstimator import StateEstimator
 
 class RobotRunnerFSM:
     def __init__(self):

@@ -2,7 +2,7 @@
 # phase : How far along we are in the swing (0 to 1)
 # swingTime : How long the swing should take (seconds)
 import numpy as np
-from src.control.MPC_Controller.math_utils.interplation import cubicBezier, cubicBezierFirstDerivative, cubicBezierSecondDerivative
+from src.control.mpc.math_utils.interplation import cubicBezier, cubicBezierFirstDerivative, cubicBezierSecondDerivative
 
 class FootSwingTrajectory:
     def __init__(self):

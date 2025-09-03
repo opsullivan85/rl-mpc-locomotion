@@ -1,12 +1,12 @@
 from math import fabs
 from numpy.linalg import norm
 # from src.control.MPC_Controller.deprecated.ConvexMPCLocomotion_copy import ConvexMPCLocomotion
-from src.control.MPC_Controller.Parameters import Parameters
-from src.control.MPC_Controller.common.Quadruped import RobotType
-from src.control.MPC_Controller.FSM_states.ControlFSMData import ControlFSMData
-from src.control.MPC_Controller.FSM_states.FSM_State import FSM_State, FSM_StateName
-from src.control.MPC_Controller.convex_MPC.ConvexMPCLocomotion import ConvexMPCLocomotion
-from src.control.MPC_Controller.math_utils.orientation_tools import deg2rad, rad2deg
+from src.control.mpc.Parameters import Parameters
+from src.control.mpc.common.Quadruped import RobotType
+from src.control.mpc.FSM_states.ControlFSMData import ControlFSMData
+from src.control.mpc.FSM_states.FSM_State import FSM_State, FSM_StateName
+from src.control.mpc.convex_MPC.ConvexMPCLocomotion import ConvexMPCLocomotion
+from src.control.mpc.math_utils.orientation_tools import deg2rad, rad2deg
 
 class FSM_State_Locomotion(FSM_State):
     """

@@ -1,8 +1,8 @@
 import numpy as np
-from src.control.MPC_Controller.Parameters import Parameters
-from src.control.MPC_Controller.utils import DTYPE, CASTING
-from src.control.MPC_Controller.FSM_states.ControlFSMData import ControlFSMData
-from src.control.MPC_Controller.utils import FSM_StateName
+from src.control.mpc.Parameters import Parameters
+from src.control.mpc.utils import DTYPE, CASTING
+from src.control.mpc.FSM_states.ControlFSMData import ControlFSMData
+from src.control.mpc.utils import FSM_StateName
 
 class FSM_State:
     """

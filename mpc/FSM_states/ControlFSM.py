@@ -4,18 +4,18 @@
 * of the states.
 """
 
-from src.control.MPC_Controller.FSM_states.FSM_State_Passive import FSM_State_Passive
-from src.control.MPC_Controller.FSM_states.FSM_State_RecoveryStand import FSM_State_RecoveyrStand
+from src.control.mpc.FSM_states.FSM_State_Passive import FSM_State_Passive
+from src.control.mpc.FSM_states.FSM_State_RecoveryStand import FSM_State_RecoveyrStand
 
-from src.control.MPC_Controller.FSM_states.FSM_State import FSM_State, FSM_StateName
-from src.control.MPC_Controller.common.Quadruped import Quadruped
-from src.control.MPC_Controller.common.StateEstimator import StateEstimator
-from src.control.MPC_Controller.common.LegController import LegController
-from src.control.MPC_Controller.Parameters import Parameters
-from src.control.MPC_Controller.FSM_states.ControlFSMData import ControlFSMData
-from src.control.MPC_Controller.FSM_states.FSM_State_Locomotion import FSM_State_Locomotion
-from src.control.MPC_Controller.common.DesiredStateCommand import DesiredStateCommand
-from src.control.MPC_Controller.utils import FSM_OperatingMode
+from src.control.mpc.FSM_states.FSM_State import FSM_State, FSM_StateName
+from src.control.mpc.common.Quadruped import Quadruped
+from src.control.mpc.common.StateEstimator import StateEstimator
+from src.control.mpc.common.LegController import LegController
+from src.control.mpc.Parameters import Parameters
+from src.control.mpc.FSM_states.ControlFSMData import ControlFSMData
+from src.control.mpc.FSM_states.FSM_State_Locomotion import FSM_State_Locomotion
+from src.control.mpc.common.DesiredStateCommand import DesiredStateCommand
+from src.control.mpc.utils import FSM_OperatingMode
 
 class FSM_StatesList:
     def __init__(self) -> None:

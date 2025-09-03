@@ -3,16 +3,16 @@ import sys
 import time
 
 import numpy as np
-from src.control.MPC_Controller.common.FootSwingTrajectory import FootSwingTrajectory
-from src.control.MPC_Controller.convex_MPC.Gait import OffsetDurationGait
-from src.control.MPC_Controller.FSM_states.ControlFSMData import ControlFSMData
-from src.control.MPC_Controller.Logger import Logger
-from src.control.MPC_Controller.math_utils.orientation_tools import (
+from src.control.mpc.common.FootSwingTrajectory import FootSwingTrajectory
+from src.control.mpc.convex_MPC.Gait import OffsetDurationGait
+from src.control.mpc.FSM_states.ControlFSMData import ControlFSMData
+from src.control.mpc.Logger import Logger
+from src.control.mpc.math_utils.orientation_tools import (
     CoordinateAxis,
     coordinateRotation,
 )
-from src.control.MPC_Controller.Parameters import Parameters
-from src.control.MPC_Controller.utils import CASTING, DTYPE, NUM_LEGS, getSideSign
+from src.control.mpc.Parameters import Parameters
+from src.control.mpc.utils import CASTING, DTYPE, NUM_LEGS, getSideSign
 
 try:
     import src.control.mpc_osqp as mpc

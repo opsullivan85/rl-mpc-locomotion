@@ -1,14 +1,14 @@
 import time
 import numpy as np
-from src.control.MPC_Controller.common.DesiredStateCommand import DesiredStateCommand
-from src.control.MPC_Controller.FSM_states.ControlFSM import ControlFSM
-from src.control.MPC_Controller.FSM_states.ControlFSMData import ControlFSMData
-from src.control.MPC_Controller.Parameters import Parameters
-from src.control.MPC_Controller.common.Quadruped import Quadruped, RobotType
-from src.control.MPC_Controller.common.LegController import LegController
-from src.control.MPC_Controller.common.StateEstimator import StateEstimator
-from src.control.MPC_Controller.convex_MPC.ConvexMPCLocomotion import ConvexMPCLocomotion
-from src.control.MPC_Controller.utils import DTYPE
+from src.control.mpc.common.DesiredStateCommand import DesiredStateCommand
+from src.control.mpc.FSM_states.ControlFSM import ControlFSM
+from src.control.mpc.FSM_states.ControlFSMData import ControlFSMData
+from src.control.mpc.Parameters import Parameters
+from src.control.mpc.common.Quadruped import Quadruped, RobotType
+from src.control.mpc.common.LegController import LegController
+from src.control.mpc.common.StateEstimator import StateEstimator
+from src.control.mpc.convex_MPC.ConvexMPCLocomotion import ConvexMPCLocomotion
+from src.control.mpc.utils import DTYPE
 from RL_Environment.WeightPolicy import WeightPolicy
 from RL_Environment.utils.utils import set_np_formatting
 

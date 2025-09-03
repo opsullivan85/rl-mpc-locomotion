@@ -1,9 +1,9 @@
-from src.control.MPC_Controller.FSM_states.ControlFSMData import ControlFSMData
-from src.control.MPC_Controller.Parameters import Parameters
-from src.control.MPC_Controller.math_utils.orientation_tools import CoordinateAxis, coordinateRotation
+from src.control.mpc.FSM_states.ControlFSMData import ControlFSMData
+from src.control.mpc.Parameters import Parameters
+from src.control.mpc.math_utils.orientation_tools import CoordinateAxis, coordinateRotation
 import numpy as np
-from src.control.MPC_Controller.convex_MPC.ConvexMPCLocomotion import ConvexMPCLocomotion
-from src.control.MPC_Controller.utils import DTYPE, getSideSign
+from src.control.mpc.convex_MPC.ConvexMPCLocomotion import ConvexMPCLocomotion
+from src.control.mpc.utils import DTYPE, getSideSign
 
 
 class SpecifiedFootstepLocomotion(ConvexMPCLocomotion):

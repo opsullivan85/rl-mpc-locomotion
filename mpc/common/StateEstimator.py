@@ -1,11 +1,11 @@
 import numpy as np
 from scipy import linalg
 
-from src.control.MPC_Controller.Parameters import Parameters
-from src.control.MPC_Controller.common.Quadruped import Quadruped
-from src.control.MPC_Controller.math_utils.moving_window_filter import MovingWindowFilter
-from src.control.MPC_Controller.utils import DTYPE
-from src.control.MPC_Controller.math_utils.orientation_tools import quat_to_rot, quat_to_rpy,rot_to_rpy, get_rot_from_normals, rpy_to_rot, Quaternion
+from src.control.mpc.Parameters import Parameters
+from src.control.mpc.common.Quadruped import Quadruped
+from src.control.mpc.math_utils.moving_window_filter import MovingWindowFilter
+from src.control.mpc.utils import DTYPE
+from src.control.mpc.math_utils.orientation_tools import quat_to_rot, quat_to_rpy,rot_to_rpy, get_rot_from_normals, rpy_to_rot, Quaternion
 
 class StateEstimate:
     def __init__(self):
