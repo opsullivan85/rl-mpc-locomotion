@@ -1,13 +1,11 @@
-from re import T
-
 from mpc.common.StateEstimator import StateEstimate
-from mpc.convex_MPC.Gait import OffsetDurationGait
+from mpc.convex_MPC.Gait import CalculatedGait
 from src.control.mpc.FSM_states.ControlFSMData import ControlFSMData
-from src.control.mpc.Parameters import Parameters
-from src.control.mpc.math_utils.orientation_tools import CoordinateAxis, coordinateRotation
+from src.control.mpc.convex_MPC.Gait import GaitABC
+from src.control.mpc.math_utils.orientation_tools import rpy_to_rot
 import numpy as np
 from src.control.mpc.convex_MPC.ConvexMPCLocomotion import ConvexMPCLocomotion
-from src.control.mpc.utils import DTYPE, getSideSign
+from src.control.mpc.utils import DTYPE
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -16,15 +14,22 @@ if TYPE_CHECKING:
 
 class SpecifiedFootstepLocomotion(ConvexMPCLocomotion):
     def __init__(self, dt: float, iterations_between_mpc: int):
-        self.footstep_locations_hip = np.zeros((4, 3), dtype=DTYPE)
-        """Four feet, desired x, y, z positions in hip frame
-        """
         super().__init__(dt, iterations_between_mpc)
+        self.footstep_locations_hip = np.zeros((4, 2), dtype=DTYPE)
+        """Four feet, desired x, y positions in respective hip frames
+        """
+        
+        self.gait = CalculatedGait(
+            dt, iterations_between_mpc, self.horizon_length
+        )
+
+    def _get_gait(self, gait_number: int) -> GaitABC:
+        return self.gait
 
     def _update_footstep_placement(
         self,
         i: int,
-        gait: OffsetDurationGait,
+        gait: GaitABC,
         data: ControlFSMData,
         state_estimator_result: StateEstimate,
         desired_velocity_robot_frame: np.ndarray,
@@ -38,9 +43,6 @@ class SpecifiedFootstepLocomotion(ConvexMPCLocomotion):
             state_estimator_result: State estimator result
             desired_velocity_robot_frame: Desired velocity in robot frame (3x1 array)
         """
-        # self.foot_swing_trajectories[i].setHeight(self.body_height / 3)
-        # self.foot_swing_trajectories[i].setFinalPosition(foot_position_global)
-        
         if self.first_swing_flags[i]:
             self.swing_time_remaining[i] = self.swing_times[i].item()
         else:
@@ -49,67 +51,56 @@ class SpecifiedFootstepLocomotion(ConvexMPCLocomotion):
         # Set swing height
         self.foot_swing_trajectories[i].setHeight(self.body_height / 3)
 
-        # Calculate hip offset and foot position in robot frame
-        hip_offset = np.array(
-            [0, getSideSign(i) * data._quadruped._abadLinkLength, 0], dtype=DTYPE
-        ).reshape((3, 1))
-        foot_position_robot_frame = data._quadruped.getHipLocation(i) + hip_offset
+        # Get the specified footstep location in the respective hip frame
+        footstep_hip_frame = np.array([
+            self.footstep_locations_hip[i, 0],
+            self.footstep_locations_hip[i, 1], 
+            # this should (roughly) put the foot in contact with the ground
+            # assuming the body frame has this height in the world frame
+            # there will be some sin error if the body is not horizontal
+            # but that should be minimal
+            -state_estimator_result.position[2]
+        ], dtype=DTYPE).reshape((3, 1))
 
-        # Apply yaw correction for stance time
-        stance_time = gait.getCurrentStanceTime(self.mpc_dt, i)
-        foot_position_yaw_corrected = (
-            coordinateRotation(
-                CoordinateAxis.Z, -self.desired_yaw_rate * stance_time / 2
-            )
-            @ foot_position_robot_frame
-        )
-
-        # Calculate basic foot position in global frame
-        foot_position_global = state_estimator_result.position + (
-            foot_position_yaw_corrected
-            + desired_velocity_robot_frame * self.swing_time_remaining[i]
-        )
-
-        # Calculate relative position offsets for better tracking
-        max_relative_position = 0.3
-        foot_x_offset_relative = (
-            state_estimator_result.vBody[0]
-            * (0.5 + Parameters.cmpc_bonus_swing)
-            * stance_time
-            + 0.03 * (state_estimator_result.vBody[0] - desired_velocity_robot_frame[0])
-            + (0.5 * state_estimator_result.position[2] / 9.81)
-            * (state_estimator_result.vBody[1] * self.desired_yaw_rate)
-        )
-
-        foot_y_offset_relative = (
-            state_estimator_result.vBody[1] * 0.5 * stance_time * self.mpc_dt
-            + 0.03 * (state_estimator_result.vBody[1] - desired_velocity_robot_frame[1])
-            + (0.5 * state_estimator_result.position[2] / 9.81)
-            * (-state_estimator_result.vBody[0] * self.desired_yaw_rate)
-        )
-
-        # Clamp offsets to prevent extreme foot placement
-        foot_x_offset_relative = min(
-            max(foot_x_offset_relative, -max_relative_position), max_relative_position
-        )
-        foot_y_offset_relative = min(
-            max(foot_y_offset_relative, -max_relative_position), max_relative_position
-        )
-
-        # Apply offsets and set final position
-        foot_position_global[0] += foot_x_offset_relative
-        foot_position_global[1] += foot_y_offset_relative
-        foot_position_global[2] = -0.003
+        # Transform from hip frame to global frame
+        # 1. Get hip position in robot body frame
+        hip_position_body_frame = data._quadruped.getHipLocation(i)
+        
+        # 2. Transform footstep from hip frame to body frame
+        # For most quadruped robots, the hip frame is aligned with the body frame 
+        # (same orientation, just translated), so we can directly add the position.
+        # If there were any hip joint rotations to consider, they would be applied here.
+        foot_position_body_frame = hip_position_body_frame + footstep_hip_frame
+        
+        # 3. Apply robot's rotation to transform from body frame to world frame
+        rotation_matrix = rpy_to_rot(state_estimator_result.rpy.flatten())
+        foot_position_world_frame = rotation_matrix @ foot_position_body_frame
+        
+        # 4. Add robot's global position to get final global position
+        foot_position_global = state_estimator_result.position + foot_position_world_frame
+        foot_position_global[2] = 0.0  # Project z down to zero
 
         self.foot_swing_trajectories[i].setFinalPosition(foot_position_global)
-    
-    def initiate_footstep(self, foot: int, location_hip: NDArray[Shape["3"], Float32], duration: float):
-        """initiates a footstep for the specified foot at the specified location in the hip frame
+
+    def initiate_footstep(
+        self,
+        leg: int,
+        location_hip: NDArray[Shape["2"], Float32],
+        duration: float,
+    ):
+        """initiates a footstep for the specified leg at the specified location
 
         Args:
-            foot (int): Index of the foot (0-3)
-            location_hip (NDArray[Shape["3"], Float32]): Desired foot position in the hip frame
+            leg (int): Index of the leg (0-3)
+            location_hip (NDArray[Shape["2"], Float32]): Desired foot position in the respective hip frame (x, y)
+                This position is relative to the hip of the specified leg.
+                z will be projected down to zero.
             duration (float): Duration of the footstep
         """
-        self.footstep_locations_hip[foot] = location_hip
-        self.swing_times[foot] = duration
+        # Store the position in the respective hip frame - x, y from input, z projected to zero
+        self.footstep_locations_hip[leg] = location_hip 
+        self.swing_times[leg] = duration
+        self.gait.initiate_footstep(
+            leg,
+            duration
+        )

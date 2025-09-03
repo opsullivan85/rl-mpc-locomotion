@@ -5,7 +5,7 @@ import time
 from mpc.common.StateEstimator import StateEstimate
 import numpy as np
 from src.control.mpc.common.FootSwingTrajectory import FootSwingTrajectory
-from src.control.mpc.convex_MPC.Gait import OffsetDurationGait
+from src.control.mpc.convex_MPC.Gait import GaitABC, OffsetDurationGait
 from src.control.mpc.FSM_states.ControlFSMData import ControlFSMData
 from src.control.mpc.Logger import Logger
 from src.control.mpc.math_utils.orientation_tools import (
@@ -275,7 +275,7 @@ class ConvexMPCLocomotion:
     def _update_footstep_placement(
         self,
         i: int,
-        gait: OffsetDurationGait,
+        gait: GaitABC,
         data: ControlFSMData,
         state_estimator_result: StateEstimate,
         desired_velocity_robot_frame: np.ndarray,
@@ -351,12 +351,7 @@ class ConvexMPCLocomotion:
 
         self.foot_swing_trajectories[i].setFinalPosition(foot_position_global)
 
-    def run(self, data: ControlFSMData):
-        # Command Setup
-        self.setup_command(data)
-        gait_number = Parameters.cmpc_gait.value
-        state_estimator_result = data._stateEstimator.getResult()
-
+    def _get_gait(self, gait_number: int) -> GaitABC:
         # pick gait
         gait = self.trotting
         if gait_number == 1:
@@ -371,6 +366,15 @@ class ConvexMPCLocomotion:
             gait = self.walking
         elif gait_number == 7:
             gait = self.trot_running
+        return gait
+
+    def run(self, data: ControlFSMData):
+        # Command Setup
+        self.setup_command(data)
+        gait_number = Parameters.cmpc_gait.value
+        state_estimator_result = data._stateEstimator.getResult()
+
+        gait = self._get_gait(gait_number)
 
         self.current_gait = gait_number
         gait.setIterations(self.iterations_between_mpc, self.iteration_counter)
@@ -432,8 +436,8 @@ class ConvexMPCLocomotion:
         self.iteration_counter += 1
 
         # gait
-        contact_states = gait.getContactState()
-        swing_states = gait.getSwingState()
+        contact_states = gait.getContactPhase()
+        swing_states = gait.getSwingPhase()
         mpc_table = gait.getMpcTable()
 
         # * update MPC

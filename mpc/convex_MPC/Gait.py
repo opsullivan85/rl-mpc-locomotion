@@ -30,7 +30,7 @@ class GaitABC(ABC):
         ...
 
     @abstractmethod
-    def getContactState(self) -> NDArray[Shape["4, 1"], Float32]:
+    def getContactPhase(self) -> NDArray[Shape["4, 1"], Float32]:
         """Calculate the current stance phase progress for each leg.
 
         Returns:
@@ -44,7 +44,7 @@ class GaitABC(ABC):
         ...
 
     @abstractmethod
-    def getSwingState(self) -> NDArray[Shape["4, 1"], Float32]:
+    def getSwingPhase(self) -> NDArray[Shape["4, 1"], Float32]:
         """Calculate the current swing phase progress for each leg.
 
         Returns:
@@ -143,7 +143,7 @@ class OffsetDurationGait(GaitABC):
             currentIteration % (iterationsPerMPC * self._nIterations)
         ) / float(iterationsPerMPC * self._nIterations)
 
-    def getContactState(self) -> NDArray[Shape["4, 1"], Float32]:
+    def getContactPhase(self) -> NDArray[Shape["4, 1"], Float32]:
         # Implementation Details:
         #     - Progress calculated as (current_phase - offset_phase) / duration_phase
         #     - Handles phase wrapping when offset occurs late in gait cycle
@@ -163,7 +163,7 @@ class OffsetDurationGait(GaitABC):
 
         return progress[:, None]  # convert to matrix
 
-    def getSwingState(self) -> NDArray[Shape["4, 1"], Float32]:
+    def getSwingPhase(self) -> NDArray[Shape["4, 1"], Float32]:
         # Implementation Details:
         #     - Swing starts when stance phase ends: swing_offset = offset + duration
         #     - Swing duration = 1.0 - stance_duration (in normalized phase)
@@ -249,11 +249,16 @@ class CalculatedGait(GaitABC):
         self.time = 0.0
         """Time since initialization"""
 
-    def specify_footstep(
-        self, leg: int, duration: float, start_time: float | None
+    def initiate_footstep(
+        self, leg: int, duration: float
     ) -> None:
-        start_time = start_time if start_time is not None else self.time
-        self.swing_start_times[leg, 0] = start_time
+        """Initiates a footstep for the specified leg.
+
+        Args:
+            leg (int): Index of the leg (0-3)
+            duration (float): Duration of the footstep
+        """
+        self.swing_start_times[leg, 0] = self.time
         self.swing_durations[leg, 0] = duration
 
     def _contact_state(self, time: float) -> NDArray[Shape["4, 1"], Int32]:
@@ -300,5 +305,12 @@ class CalculatedGait(GaitABC):
 
     # override
     def getCurrentStanceTime(self, dtMPC: float, leg: int) -> float:
-        raise RuntimeError("Not implemented / Doesn't apply to this class")
-        return 0
+        # For CalculatedGait, we don't have predetermined stance times like OffsetDurationGait
+        # Return a reasonable default stance duration or estimate based on current state
+        # This is used for footstep placement heuristics in the parent class
+        assert self.mpc_dt == dtMPC, "Unexpected MPC dt"
+        
+        # Return a default stance time (could be made configurable)
+        # This is approximately the time the foot will remain on the ground
+        default_stance_time = 0.3  # seconds
+        return default_stance_time
