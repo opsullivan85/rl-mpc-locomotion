@@ -71,11 +71,11 @@ class SpecifiedFootstepLocomotion(ConvexMPCLocomotion):
         # For most quadruped robots, the hip frame is aligned with the body frame 
         # (same orientation, just translated), so we can directly add the position.
         # If there were any hip joint rotations to consider, they would be applied here.
-        foot_position_body_frame = hip_position_body_frame + footstep_hip_frame
-        
-        # 3. Apply robot's rotation to transform from body frame to world frame
-        rotation_matrix = rpy_to_rot(state_estimator_result.rpy.flatten())
-        foot_position_world_frame = rotation_matrix @ foot_position_body_frame
+        #
+        # I'm not sure why, but this actually ends up in the world frame? or I have all
+        # the frames mis-labeled. Either way this works. I'm just making up the frame
+        # names as I go since the base code base wasn't very clear.
+        foot_position_world_frame = hip_position_body_frame + footstep_hip_frame
         
         # 4. Add robot's global position to get final global position
         foot_position_global = state_estimator_result.position + foot_position_world_frame

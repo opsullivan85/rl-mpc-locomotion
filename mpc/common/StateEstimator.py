@@ -9,20 +9,30 @@ from src.control.mpc.math_utils.orientation_tools import quat_to_rot, quat_to_rp
 
 class StateEstimate:
     def __init__(self):
+        # WARNING: Take the below docstrings with a grain of salt.
+        #     This is just my understanding of the code base (as someone who didn't write it)
         self.position = np.zeros((3,1), dtype=DTYPE)
+        """Estimated position of the robot's center of mass in the world frame (x, y, z in meters)."""
         self.vWorld = np.zeros((3,1), dtype=DTYPE)
+        """Linear velocity of the center of mass in the world frame (m/s in x, y, z)."""
         self.omegaWorld = np.zeros((3,1), dtype=DTYPE)
+        """Angular velocity of the body in the world frame (rad/s around x, y, z)."""
         self.orientation = Quaternion(1, 0, 0, 0)
-
+        """Orientation of the robot in the world frame as a quaternion (w, x, y, z)."""
         self.rBody = np.zeros((3,3), dtype=DTYPE)
+        """Rotation matrix from body frame to world frame."""
         self.rpy = np.zeros((3,1), dtype=DTYPE)
+        """Roll, pitch, yaw angles of the body in the world frame (radians)."""
         self.rpyBody = np.zeros((3,1), dtype=DTYPE)
-
+        """Roll, pitch, yaw angles of the body in the yaw-aligned ground frame (radians)."""
         self.ground_normal_world = np.array([0,0,1], dtype=DTYPE)
+        """Estimated ground normal vector in the world frame (unit vector)."""
         self.ground_normal_yaw = np.array([0,0,1], dtype=DTYPE)
-
+        """Estimated ground normal vector in the yaw-aligned frame (unit vector)."""
         self.vBody = np.zeros((3,1), dtype=DTYPE)
+        """Linear velocity of the center of mass in the body frame (m/s in x, y, z)."""
         self.omegaBody = np.zeros((3,1), dtype=DTYPE)
+        """Angular velocity of the body in the body frame (rad/s around x, y, z)."""
 
 class StateEstimator:
 
