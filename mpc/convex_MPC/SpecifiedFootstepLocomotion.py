@@ -1,24 +1,32 @@
+from re import T
+
+from mpc.common.StateEstimator import StateEstimate
+from mpc.convex_MPC.Gait import OffsetDurationGait
 from src.control.mpc.FSM_states.ControlFSMData import ControlFSMData
 from src.control.mpc.Parameters import Parameters
 from src.control.mpc.math_utils.orientation_tools import CoordinateAxis, coordinateRotation
 import numpy as np
 from src.control.mpc.convex_MPC.ConvexMPCLocomotion import ConvexMPCLocomotion
 from src.control.mpc.utils import DTYPE, getSideSign
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from nptyping import NDArray, Float32, Shape
 
 
 class SpecifiedFootstepLocomotion(ConvexMPCLocomotion):
     def __init__(self, dt: float, iterations_between_mpc: int):
-        self.footstep_locations_global = np.zeros((4, 3), dtype=DTYPE)
-        """Four feet, desired x, y, z positions in world frame
+        self.footstep_locations_hip = np.zeros((4, 3), dtype=DTYPE)
+        """Four feet, desired x, y, z positions in hip frame
         """
         super().__init__(dt, iterations_between_mpc)
 
     def _update_footstep_placement(
         self,
         i: int,
-        gait,
+        gait: OffsetDurationGait,
         data: ControlFSMData,
-        state_estimator_result,
+        state_estimator_result: StateEstimate,
         desired_velocity_robot_frame: np.ndarray,
     ):
         """Calculate the footstep placement for swing trajectory.
@@ -30,6 +38,9 @@ class SpecifiedFootstepLocomotion(ConvexMPCLocomotion):
             state_estimator_result: State estimator result
             desired_velocity_robot_frame: Desired velocity in robot frame (3x1 array)
         """
+        # self.foot_swing_trajectories[i].setHeight(self.body_height / 3)
+        # self.foot_swing_trajectories[i].setFinalPosition(foot_position_global)
+        
         if self.first_swing_flags[i]:
             self.swing_time_remaining[i] = self.swing_times[i].item()
         else:
@@ -92,10 +103,13 @@ class SpecifiedFootstepLocomotion(ConvexMPCLocomotion):
 
         self.foot_swing_trajectories[i].setFinalPosition(foot_position_global)
     
-    def set_footstep_locations(self, footstep_locations: np.ndarray):
-        """Set the desired footstep locations in the global frame.
+    def initiate_footstep(self, foot: int, location_hip: NDArray[Shape["3"], Float32], duration: float):
+        """initiates a footstep for the specified foot at the specified location in the hip frame
 
         Args:
-            footstep_locations (np.ndarray): Desired footstep locations in the global frame.
+            foot (int): Index of the foot (0-3)
+            location_hip (NDArray[Shape["3"], Float32]): Desired foot position in the hip frame
+            duration (float): Duration of the footstep
         """
-        self.footstep_locations_global = footstep_locations
+        self.footstep_locations_hip[foot] = location_hip
+        self.swing_times[foot] = duration

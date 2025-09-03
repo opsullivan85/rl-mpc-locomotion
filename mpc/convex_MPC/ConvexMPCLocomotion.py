@@ -2,6 +2,7 @@
 import sys
 import time
 
+from mpc.common.StateEstimator import StateEstimate
 import numpy as np
 from src.control.mpc.common.FootSwingTrajectory import FootSwingTrajectory
 from src.control.mpc.convex_MPC.Gait import OffsetDurationGait
@@ -274,9 +275,9 @@ class ConvexMPCLocomotion:
     def _update_footstep_placement(
         self,
         i: int,
-        gait,
+        gait: OffsetDurationGait,
         data: ControlFSMData,
-        state_estimator_result,
+        state_estimator_result: StateEstimate,
         desired_velocity_robot_frame: np.ndarray,
     ):
         """Calculate the footstep placement for swing trajectory.

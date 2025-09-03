@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from nptyping import NDArray, Float32, Shape
+    from nptyping import NDArray, Float32, Shape, Int32
 
 
 class GaitABC(ABC):
@@ -20,7 +20,7 @@ class GaitABC(ABC):
     """
 
     @abstractmethod
-    def setIterations(self, iterationsPerMPC: int, currentIteration: int):
+    def setIterations(self, iterationsPerMPC: int, currentIteration: int) -> None:
         """Update the current gait timing based on the global iteration counter.
 
         Args:
@@ -65,15 +65,6 @@ class GaitABC(ABC):
             list: Binary contact states for the prediction horizon.
                  Length = nSegment * 4, arranged as [leg0_t0, leg1_t0, leg2_t0, leg3_t0,
                                                       leg0_t1, leg1_t1, leg2_t1, leg3_t1, ...]
-        """
-        ...
-
-    @abstractmethod
-    def getCurrentGaitPhase(self) -> float:
-        """Get the current discrete gait phase as a segment index.
-
-        Returns:
-            int: Current gait segment [0, nSegment-1].
         """
         ...
 
@@ -127,18 +118,18 @@ class OffsetDurationGait(GaitABC):
         #     - Assumes first leg (FR) determines overall stance/swing timing for the gait
 
         # offset in mpc segments
-        self.__offsets = offset.flatten()
+        self._offsets = offset.flatten()
         # duration of step in mpc segments
-        self.__durations = durations.flatten()
+        self._durations = durations.flatten()
         # offsets in phase (0 to 1)
-        self.__offsetsFloat = offset / nSegment
+        self._offsetsFloat = offset / nSegment
         # durations in phase (0 to 1)
-        self.__durationsFloat = durations / nSegment
-        self.__nIterations = nSegment
-        self.__name = name
-        self.__stance = durations[0]
-        self.__swing = nSegment - durations[0]
-        self.__mpc_table = [0 for _ in range(nSegment * 4)]
+        self._durationsFloat = durations / nSegment
+        self._nIterations = nSegment
+        self._name = name
+        self._stance = durations[0]
+        self._swing = nSegment - durations[0]
+        self._mpc_table = [0 for _ in range(nSegment * 4)]
 
     def setIterations(self, iterationsPerMPC: int, currentIteration: int) -> None:
         # Implementation Details:
@@ -147,10 +138,10 @@ class OffsetDurationGait(GaitABC):
         #     - Phase calculation ensures smooth transitions and proper gait timing
         #     - Used by getContactState(), getSwingState(), and getMpcTable()
 
-        self.__iteration = (currentIteration / iterationsPerMPC) % self.__nIterations
-        self.__phase = float(
-            currentIteration % (iterationsPerMPC * self.__nIterations)
-        ) / float(iterationsPerMPC * self.__nIterations)
+        self._iteration = (currentIteration / iterationsPerMPC) % self._nIterations
+        self._phase = float(
+            currentIteration % (iterationsPerMPC * self._nIterations)
+        ) / float(iterationsPerMPC * self._nIterations)
 
     def getContactState(self) -> NDArray[Shape["4, 1"], Float32]:
         # Implementation Details:
@@ -159,16 +150,16 @@ class OffsetDurationGait(GaitABC):
         #     - Returns 0.0 when leg is outside its designated stance window
         #     - Used by ConvexMPCLocomotion.run() for state_estimator.setContactPhase()
 
-        progress = self.__phase - self.__offsetsFloat
+        progress = self._phase - self._offsetsFloat
 
         for i in range(4):
             if progress[i] < 0:
                 progress[i] += 1.0
 
-            if progress[i] > self.__durationsFloat[i]:
+            if progress[i] > self._durationsFloat[i]:
                 progress[i] = 0.0
             else:
-                progress[i] = progress[i] / self.__durationsFloat[i]
+                progress[i] = progress[i] / self._durationsFloat[i]
 
         return progress[:, None]  # convert to matrix
 
@@ -179,13 +170,13 @@ class OffsetDurationGait(GaitABC):
         #     - Handles phase wrapping and zero-duration swings (pure stance gaits)
         #     - Used by ConvexMPCLocomotion.run() to drive FootSwingTrajectory.computeSwingTrajectoryBezier()
 
-        swing_offset = self.__offsetsFloat + self.__durationsFloat
+        swing_offset = self._offsetsFloat + self._durationsFloat
         for i in range(4):
             if swing_offset[i] > 1:
                 swing_offset[i] -= 1.0
-        swing_duration = np.ones_like(self.__durationsFloat) - self.__durationsFloat
+        swing_duration = np.ones_like(self._durationsFloat) - self._durationsFloat
 
-        progress = self.__phase - swing_offset
+        progress = self._phase - swing_offset
 
         for i in range(4):
             if progress[i] < 0:
@@ -214,30 +205,100 @@ class OffsetDurationGait(GaitABC):
         #     - Enables predictive control of contact transitions
         #     - Allows optimization of forces only when feet are expected to be in contact
 
-        for i in range(self.__nIterations):
+        for i in range(self._nIterations):
 
-            iter = (i + self.__iteration + 1) % self.__nIterations
-            progress = iter - self.__offsets
+            iter = (i + self._iteration + 1) % self._nIterations
+            progress = iter - self._offsets
             for j in range(4):
                 if progress[j] < 0:
-                    progress[j] += self.__nIterations
-                if progress[j] < self.__durations[j]:
-                    self.__mpc_table[i * 4 + j] = 1
+                    progress[j] += self._nIterations
+                if progress[j] < self._durations[j]:
+                    self._mpc_table[i * 4 + j] = 1
                 else:
-                    self.__mpc_table[i * 4 + j] = 0
+                    self._mpc_table[i * 4 + j] = 0
 
-        return self.__mpc_table
-
-    def getCurrentGaitPhase(self) -> float:
-        return self.__iteration
+        return self._mpc_table
 
     def getCurrentSwingTime(self, dtMPC: float, leg: int) -> float:
         # Note:
         #     Current implementation assumes all legs have the same swing duration,
         #     using only the first leg's stance duration. For asymmetric gaits,
         #     this could be modified to use leg-specific durations.
-        
-        return dtMPC * self.__swing
+
+        return dtMPC * self._swing
 
     def getCurrentStanceTime(self, dtMPC: float, leg: int) -> float:
-        return dtMPC * self.__stance
+        return dtMPC * self._stance
+
+
+class CalculatedGait(GaitABC):
+    def __init__(
+        self, controller_dt: float, iterations_per_mpc: int, mpc_horizon: int
+    ) -> None:
+        self.swing_start_times = np.zeros((4, 1), dtype=np.float32)
+        """Start time of each active swing phase"""
+        self.swing_durations = np.zeros((4, 1), dtype=np.float32)
+        """Total duration of each active swing phase"""
+        self.controller_dt = controller_dt
+        """Time step per iteration"""
+        self.iterations_per_mpc: int = iterations_per_mpc
+        """Number of iterations per MPC cycle"""
+        self.mpc_horizon: int = mpc_horizon
+        """MPC horizon"""
+        self.mpc_dt = self.controller_dt * self.iterations_per_mpc
+        self.time = 0.0
+        """Time since initialization"""
+
+    def specify_footstep(
+        self, leg: int, duration: float, start_time: float | None
+    ) -> None:
+        start_time = start_time if start_time is not None else self.time
+        self.swing_start_times[leg, 0] = start_time
+        self.swing_durations[leg, 0] = duration
+
+    def _contact_state(self, time: float) -> NDArray[Shape["4, 1"], Int32]:
+        """Gets the expected contact state at a specified time
+
+        Returns:
+            NDArray[Shape["4, 1"], Int32]: The expected contact state for each leg
+        """
+        contact_state = self.swing_start_times + self.swing_durations <= time
+        return contact_state.astype(np.int32)
+
+    # override
+    def setIterations(self, iterationsPerMPC: int, currentIteration: int) -> None:
+        # we aren't using the variables here
+        dt = self.controller_dt
+        self.time += dt
+
+    # override
+    def getContactPhase(self) -> NDArray[Shape["4, 1"], Float32]:
+        # We are just returning either a 1 or zero here since we
+        # can't know when the feet will next be picked up
+        # TODO: maybe we could assume the contact lengths will be simmilar to the previous?
+        return self._contact_state(self.time).astype(np.float32)
+
+    # override
+    def getSwingPhase(self) -> NDArray[Shape["4, 1"], Float32]:
+        swing_phase = (self.time - self.swing_start_times) / self.swing_durations
+        swing_phase = np.clip(swing_phase, 0, 1)
+        return swing_phase
+
+    # override
+    def getMpcTable(self) -> list[int]:
+        mpc_table = []
+        for i in range(self.mpc_horizon):
+            # TODO: should this be i or i+1?
+            time = self.time + i * self.mpc_dt
+            mpc_table.extend(self._contact_state(time).flatten().tolist())
+        return mpc_table
+
+    # override
+    def getCurrentSwingTime(self, dtMPC: float, leg: int) -> float:
+        assert self.mpc_dt == dtMPC, "Unexpected MPC dt"
+        return self.swing_durations[leg, 0]
+
+    # override
+    def getCurrentStanceTime(self, dtMPC: float, leg: int) -> float:
+        raise RuntimeError("Not implemented / Doesn't apply to this class")
+        return 0
