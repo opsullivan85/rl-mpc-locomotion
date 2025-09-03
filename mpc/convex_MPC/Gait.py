@@ -1,9 +1,6 @@
 import numpy as np
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from nptyping import NDArray, Float32, Shape, Int32
+from nptyping import NDArray, Float32, Shape, Int32
 
 
 class GaitABC(ABC):

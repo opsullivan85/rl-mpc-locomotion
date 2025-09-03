@@ -2,7 +2,7 @@
 import sys
 import time
 
-from mpc.common.StateEstimator import StateEstimate
+from src.control.mpc.common.StateEstimator import StateEstimate
 import numpy as np
 from src.control.mpc.common.FootSwingTrajectory import FootSwingTrajectory
 from src.control.mpc.convex_MPC.Gait import GaitABC, OffsetDurationGait

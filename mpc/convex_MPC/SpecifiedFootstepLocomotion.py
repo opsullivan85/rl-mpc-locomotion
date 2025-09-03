@@ -6,10 +6,7 @@ from src.control.mpc.math_utils.orientation_tools import rpy_to_rot
 import numpy as np
 from src.control.mpc.convex_MPC.ConvexMPCLocomotion import ConvexMPCLocomotion
 from src.control.mpc.utils import DTYPE
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from nptyping import NDArray, Float32, Shape
+from nptyping import NDArray, Float32, Shape
 
 
 class SpecifiedFootstepLocomotion(ConvexMPCLocomotion):

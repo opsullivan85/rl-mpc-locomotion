@@ -25,7 +25,7 @@ class RobotRunnerMin:
         self.robotType = robotType
 
         # TODO tune these parameters
-        self.cMPC = ConvexMPCLocomotion(dt, int(27 / (1000.0 * dt)))
+        self.cMPC = ConvexMPCLocomotion(dt, 1)
 
         # init quadruped
         self._quadruped = Quadruped(self.robotType)
