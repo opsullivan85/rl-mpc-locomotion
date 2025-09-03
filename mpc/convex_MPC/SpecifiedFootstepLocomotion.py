@@ -15,13 +15,11 @@ class SpecifiedFootstepLocomotion(ConvexMPCLocomotion):
         # self.footstep_locations_hip = np.zeros((4, 2), dtype=DTYPE)
         # offset nominal stance so feet are out to the sides and further
         # out from the robot front and back
-        _side_offset = 0.07
-        _front_back_offset = 0.02
         self.footstep_locations_hip = np.asarray([
-            [-_side_offset, _front_back_offset],   # Front Right
-            [_side_offset, _front_back_offset],    # Front Left
-            [-_side_offset, -_front_back_offset],  # Rear Right
-            [_side_offset, -_front_back_offset]    # Rear Left
+            [ 0.1,  0.1],  # Front Right
+            [ 0.1, -0.1],  # Front Left
+            [-0.1,  0.1],  # Rear Right
+            [-0.1, -0.1]   # Rear Left
         ])
 
         """Four feet, desired x, y positions in respective hip frames
@@ -51,11 +49,6 @@ class SpecifiedFootstepLocomotion(ConvexMPCLocomotion):
             state_estimator_result: State estimator result
             desired_velocity_robot_frame: Desired velocity in robot frame (3x1 array)
         """
-        if self.first_swing_flags[i]:
-            self.swing_time_remaining[i] = self.swing_times[i].item()
-        else:
-            self.swing_time_remaining[i] -= self.dt
-
         # Set swing height
         self.foot_swing_trajectories[i].setHeight(self.body_height / 3)
 

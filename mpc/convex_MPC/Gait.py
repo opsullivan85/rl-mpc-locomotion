@@ -234,7 +234,7 @@ class CalculatedGait(GaitABC):
     ) -> None:
         self.swing_start_times = np.zeros((4, 1), dtype=np.float32)
         """Start time of each active swing phase"""
-        self.swing_durations = np.full((4, 1), 0.2, dtype=np.float32)
+        self.swing_durations = np.full((4, 1), 0.0, dtype=np.float32)
         """Total duration of each active swing phase"""
         self.controller_dt = controller_dt
         """Time step per iteration"""
@@ -282,8 +282,12 @@ class CalculatedGait(GaitABC):
 
     # override
     def getSwingPhase(self) -> NDArray[Shape["4, 1"], Float32]:
-        swing_phase = (self.time - self.swing_start_times) / self.swing_durations
-        swing_phase = np.clip(swing_phase, 0, 1)
+        # ignore warnings in the case that the swing_durations
+        # are zero. This is the expected behavior at startup
+        with np.errstate(divide='ignore'):
+            swing_phase = (self.time - self.swing_start_times) / self.swing_durations
+        # if swing phase is 1 or greater set to 0
+        swing_phase[swing_phase >= 1.0] = 0.0
         return swing_phase
 
     # override
