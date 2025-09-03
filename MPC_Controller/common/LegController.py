@@ -1,9 +1,9 @@
 import math
 import numpy as np
 from math import sin, cos
-from MPC_Controller.Parameters import Parameters
-from MPC_Controller.common.Quadruped import Quadruped
-from MPC_Controller.utils import DTYPE, getSideSign
+from src.control.MPC_Controller.Parameters import Parameters
+from src.control.MPC_Controller.common.Quadruped import Quadruped
+from src.control.MPC_Controller.utils import DTYPE, getSideSign
 
 class LegControllerCommand:
     def __init__(self):

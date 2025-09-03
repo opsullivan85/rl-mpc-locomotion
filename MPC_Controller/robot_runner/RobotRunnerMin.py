@@ -1,10 +1,10 @@
-from MPC_Controller.common.DesiredStateCommand import DesiredStateCommand
-from MPC_Controller.FSM_states.ControlFSMData import ControlFSMData
-from MPC_Controller.Parameters import Parameters
-from MPC_Controller.common.Quadruped import Quadruped, RobotType
-from MPC_Controller.common.LegController import LegController
-from MPC_Controller.common.StateEstimator import StateEstimator
-from MPC_Controller.convex_MPC.ConvexMPCLocomotion import ConvexMPCLocomotion
+from src.control.MPC_Controller.common.DesiredStateCommand import DesiredStateCommand
+from src.control.MPC_Controller.FSM_states.ControlFSMData import ControlFSMData
+from src.control.MPC_Controller.Parameters import Parameters
+from src.control.MPC_Controller.common.Quadruped import Quadruped, RobotType
+from src.control.MPC_Controller.common.LegController import LegController
+from src.control.MPC_Controller.common.StateEstimator import StateEstimator
+from src.control.MPC_Controller.convex_MPC.ConvexMPCLocomotion import ConvexMPCLocomotion
 from nptyping import NDArray, Float32, Shape
 
 from typing import TYPE_CHECKING

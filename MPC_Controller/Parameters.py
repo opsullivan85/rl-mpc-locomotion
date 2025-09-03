@@ -1,4 +1,4 @@
-from MPC_Controller.utils import GaitType, FSM_OperatingMode, FSM_StateName
+from src.control.MPC_Controller.utils import GaitType, FSM_OperatingMode, FSM_StateName
 
 class Parameters:
     cmpc_x_drag = 3.0

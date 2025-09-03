@@ -3,19 +3,19 @@ import sys
 import time
 
 import numpy as np
-from MPC_Controller.common.FootSwingTrajectory import FootSwingTrajectory
-from MPC_Controller.convex_MPC.Gait import OffsetDurationGait
-from MPC_Controller.FSM_states.ControlFSMData import ControlFSMData
-from MPC_Controller.Logger import Logger
-from MPC_Controller.math_utils.orientation_tools import (
+from src.control.MPC_Controller.common.FootSwingTrajectory import FootSwingTrajectory
+from src.control.MPC_Controller.convex_MPC.Gait import OffsetDurationGait
+from src.control.MPC_Controller.FSM_states.ControlFSMData import ControlFSMData
+from src.control.MPC_Controller.Logger import Logger
+from src.control.MPC_Controller.math_utils.orientation_tools import (
     CoordinateAxis,
     coordinateRotation,
 )
-from MPC_Controller.Parameters import Parameters
-from MPC_Controller.utils import CASTING, DTYPE, NUM_LEGS, getSideSign
+from src.control.MPC_Controller.Parameters import Parameters
+from src.control.MPC_Controller.utils import CASTING, DTYPE, NUM_LEGS, getSideSign
 
 try:
-    import mpc_osqp as mpc
+    import src.control.mpc_osqp as mpc
 except:
     print("You need to install 'rl-mpc-locomotion'")
     print("Run 'pip install -e .' in this repo")
@@ -273,7 +273,7 @@ class ConvexMPCLocomotion:
 
     def _update_footstep_placement(
         self,
-        leg_idx: int,
+        i: int,
         gait,
         data: ControlFSMData,
         state_estimator_result,
@@ -282,28 +282,28 @@ class ConvexMPCLocomotion:
         """Calculate the footstep placement for swing trajectory.
 
         Args:
-            leg_idx: Index of the leg (0-3)
+            i: Index of the leg (0-3)
             gait: Current gait object
             data: Control FSM data
             state_estimator_result: State estimator result
             desired_velocity_robot_frame: Desired velocity in robot frame (3x1 array)
         """
-        if self.first_swing_flags[leg_idx]:
-            self.swing_time_remaining[leg_idx] = self.swing_times[leg_idx].item()
+        if self.first_swing_flags[i]:
+            self.swing_time_remaining[i] = self.swing_times[i].item()
         else:
-            self.swing_time_remaining[leg_idx] -= self.dt
+            self.swing_time_remaining[i] -= self.dt
 
         # Set swing height
-        self.foot_swing_trajectories[leg_idx].setHeight(self.body_height / 3)
+        self.foot_swing_trajectories[i].setHeight(self.body_height / 3)
 
         # Calculate hip offset and foot position in robot frame
         hip_offset = np.array(
-            [0, getSideSign(leg_idx) * data._quadruped._abadLinkLength, 0], dtype=DTYPE
+            [0, getSideSign(i) * data._quadruped._abadLinkLength, 0], dtype=DTYPE
         ).reshape((3, 1))
-        foot_position_robot_frame = data._quadruped.getHipLocation(leg_idx) + hip_offset
+        foot_position_robot_frame = data._quadruped.getHipLocation(i) + hip_offset
 
         # Apply yaw correction for stance time
-        stance_time = gait.getCurrentStanceTime(self.mpc_dt, leg_idx)
+        stance_time = gait.getCurrentStanceTime(self.mpc_dt, i)
         foot_position_yaw_corrected = (
             coordinateRotation(
                 CoordinateAxis.Z, -self.desired_yaw_rate * stance_time / 2
@@ -314,7 +314,7 @@ class ConvexMPCLocomotion:
         # Calculate basic foot position in global frame
         foot_position_global = state_estimator_result.position + (
             foot_position_yaw_corrected
-            + desired_velocity_robot_frame * self.swing_time_remaining[leg_idx]
+            + desired_velocity_robot_frame * self.swing_time_remaining[i]
         )
 
         # Calculate relative position offsets for better tracking
@@ -348,7 +348,7 @@ class ConvexMPCLocomotion:
         foot_position_global[1] += foot_y_offset_relative
         foot_position_global[2] = -0.003
 
-        self.foot_swing_trajectories[leg_idx].setFinalPosition(foot_position_global)
+        self.foot_swing_trajectories[i].setFinalPosition(foot_position_global)
 
     def run(self, data: ControlFSMData):
         # Command Setup
@@ -420,7 +420,7 @@ class ConvexMPCLocomotion:
 
         for i in range(4):
             self._update_footstep_placement(
-                leg_idx=i,
+                i=i,
                 gait=gait,
                 data=data,
                 state_estimator_result=state_estimator_result,

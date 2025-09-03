@@ -1,9 +1,9 @@
 from math import floor
 import numpy as np
-from MPC_Controller.FSM_states.ControlFSMData import ControlFSMData
-from MPC_Controller.FSM_states.FSM_State import FSM_State, FSM_StateName
-from MPC_Controller.Parameters import Parameters
-from MPC_Controller.utils import DTYPE
+from src.control.MPC_Controller.FSM_states.ControlFSMData import ControlFSMData
+from src.control.MPC_Controller.FSM_states.FSM_State import FSM_State, FSM_StateName
+from src.control.MPC_Controller.Parameters import Parameters
+from src.control.MPC_Controller.utils import DTYPE
 
 StandUp = 0
 FoldLegs = 1
