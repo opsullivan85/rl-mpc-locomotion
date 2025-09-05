@@ -269,9 +269,7 @@ class CalculatedGait(GaitABC):
 
     # override
     def setIterations(self, iterationsPerMPC: int, currentIteration: int) -> None:
-        # we aren't using the variables here
-        dt = self.controller_dt
-        self.time += dt
+        self.time = currentIteration * self.controller_dt
 
     # override
     def getContactPhase(self) -> NDArray[Shape["4, 1"], Float32]:
@@ -282,6 +280,9 @@ class CalculatedGait(GaitABC):
 
     # override
     def getSwingPhase(self) -> NDArray[Shape["4, 1"], Float32]:
+        if np.all(self.swing_durations == 0):
+            return np.zeros((4, 1), dtype=np.float32)
+
         # ignore warnings in the case that the swing_durations
         # are zero. This is the expected behavior at startup
         with np.errstate(divide='ignore'):

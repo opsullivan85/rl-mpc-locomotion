@@ -15,22 +15,30 @@ class SpecifiedFootstepLocomotion(ConvexMPCLocomotion):
         # self.footstep_locations_hip = np.zeros((4, 2), dtype=DTYPE)
         # offset nominal stance so feet are out to the sides and further
         # out from the robot front and back
-        self.footstep_locations_hip = np.asarray([
-            [ 0.1,  0.1],  # Front Right
-            [ 0.1, -0.1],  # Front Left
-            [-0.1,  0.1],  # Rear Right
-            [-0.1, -0.1]   # Rear Left
-        ])
+        self.footstep_locations_hip = np.asarray(
+            [
+                [0.1, 0.1],  # Front Right
+                [0.1, -0.1],  # Front Left
+                [-0.1, 0.1],  # Rear Right
+                [-0.1, -0.1],  # Rear Left
+            ]
+        )
 
         """Four feet, desired x, y positions in respective hip frames
         """
-        
-        self.gait = CalculatedGait(
-            dt, iterations_between_mpc, self.horizon_length
-        )
+
+        self.gait = CalculatedGait(dt, iterations_between_mpc, self.horizon_length)
 
     def _get_gait(self, gait_number: int) -> GaitABC:
         return self.gait
+
+    # override
+    def initialize(self, *args, **kwargs) -> None:
+        super().initialize(*args, **kwargs)
+        # override default gait with our specified footstep gait
+        self.gait = CalculatedGait(
+            self.dt, self.iterations_between_mpc, self.horizon_length
+        )
 
     def _update_footstep_placement(
         self,
@@ -53,22 +61,25 @@ class SpecifiedFootstepLocomotion(ConvexMPCLocomotion):
         self.foot_swing_trajectories[i].setHeight(self.body_height / 3)
 
         # Get the specified footstep location in the respective hip frame
-        footstep_hip_frame = np.array([
-            self.footstep_locations_hip[i, 0],
-            self.footstep_locations_hip[i, 1], 
-            # this should (roughly) put the foot in contact with the ground
-            # assuming the body frame has this height in the world frame
-            # there will be some sin error if the body is not horizontal
-            # but that should be minimal
-            -state_estimator_result.position[2,0]
-        ], dtype=DTYPE).reshape((3, 1))
+        footstep_hip_frame = np.array(
+            [
+                self.footstep_locations_hip[i, 0],
+                self.footstep_locations_hip[i, 1],
+                # this should (roughly) put the foot in contact with the ground
+                # assuming the body frame has this height in the world frame
+                # there will be some sin error if the body is not horizontal
+                # but that should be minimal
+                -state_estimator_result.position[2, 0],
+            ],
+            dtype=DTYPE,
+        ).reshape((3, 1))
 
         # Transform from hip frame to global frame
         # 1. Get hip position in robot body frame
         hip_position_body_frame = data._quadruped.getHipLocation(i)
-        
+
         # 2. Transform footstep from hip frame to body frame
-        # For most quadruped robots, the hip frame is aligned with the body frame 
+        # For most quadruped robots, the hip frame is aligned with the body frame
         # (same orientation, just translated), so we can directly add the position.
         # If there were any hip joint rotations to consider, they would be applied here.
         #
@@ -76,9 +87,11 @@ class SpecifiedFootstepLocomotion(ConvexMPCLocomotion):
         # the frames mis-labeled. Either way this works. I'm just making up the frame
         # names as I go since the base code base wasn't very clear.
         foot_position_world_frame = hip_position_body_frame + footstep_hip_frame
-        
+
         # 4. Add robot's global position to get final global position
-        foot_position_global = state_estimator_result.position + foot_position_world_frame
+        foot_position_global = (
+            state_estimator_result.position + foot_position_world_frame
+        )
         foot_position_global[2] = 0.0  # Project z down to zero
 
         self.foot_swing_trajectories[i].setFinalPosition(foot_position_global)
@@ -99,9 +112,6 @@ class SpecifiedFootstepLocomotion(ConvexMPCLocomotion):
             duration (float): Duration of the footstep
         """
         # Store the position in the respective hip frame - x, y from input, z projected to zero
-        self.footstep_locations_hip[leg] = location_hip 
+        self.footstep_locations_hip[leg] = location_hip
         self.swing_times[leg] = duration
-        self.gait.initiate_footstep(
-            leg,
-            duration
-        )
+        self.gait.initiate_footstep(leg, duration)

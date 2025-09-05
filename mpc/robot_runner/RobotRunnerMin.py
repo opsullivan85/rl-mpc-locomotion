@@ -17,7 +17,7 @@ class RobotRunnerMin:
     def __init__(self):
         pass
 
-    def init(self, robotType: RobotType, dt: float = 0.01):
+    def init(self, robotType: RobotType, dt: float = 0.01, iterations_between_mpc: int = 1):
         """
         Initializes the robot model, state estimator, leg controller,
         robot data, and any control logic specific data.
@@ -25,7 +25,7 @@ class RobotRunnerMin:
         self.robotType = robotType
 
         # TODO tune these parameters
-        self.cMPC = SpecifiedFootstepLocomotion(dt, 1)
+        self.cMPC = SpecifiedFootstepLocomotion(dt, iterations_between_mpc)
 
         # init quadruped
         self._quadruped = Quadruped(self.robotType)
