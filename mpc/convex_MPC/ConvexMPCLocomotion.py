@@ -112,7 +112,7 @@ class ConvexMPCLocomotion:
             (3, 3)
         )
         self.kp_stance = np.zeros_like(self.kp_swing)
-        self.kd_stance = self.kd_swing
+        self.kd_stance = self.kd_swing * 2
 
         self.logger = Logger("logs/")
 
