@@ -10,14 +10,14 @@ class LegControllerCommand:
         self.tauFeedForward = np.zeros((3,1), dtype=DTYPE)
         self.forceFeedForward = np.zeros((3,1), dtype=DTYPE)
 
-        self.qDes = np.zeros((3,1), dtype=DTYPE)
+        # self.qDes = np.zeros((3,1), dtype=DTYPE)
         self.qdDes = np.zeros((3,1), dtype=DTYPE)
         self.pDes = np.zeros((3,1), dtype=DTYPE)
         self.vDes = np.zeros((3,1), dtype=DTYPE)
 
         self.kpCartesian = np.zeros((3,3), dtype=DTYPE)
         self.kdCartesian = np.zeros((3,3), dtype=DTYPE)
-        self.kpJoint = np.zeros((3,3), dtype=DTYPE)
+        # self.kpJoint = np.zeros((3,3), dtype=DTYPE)
         self.kdJoint = np.zeros((3,3), dtype=DTYPE)
 
     def zero(self):
@@ -27,14 +27,14 @@ class LegControllerCommand:
         self.tauFeedForward.fill(0)
         self.forceFeedForward.fill(0)
 
-        self.qDes.fill(0)
+        # self.qDes.fill(0)
         self.qdDes.fill(0)
         self.pDes.fill(0)
         self.vDes.fill(0)
 
         self.kpCartesian.fill(0)
         self.kdCartesian.fill(0)
-        self.kpJoint.fill(0)
+        # self.kpJoint.fill(0)
         self.kdJoint.fill(0)
 
 class LegControllerData:
@@ -119,7 +119,7 @@ class LegController:
             legTorque = self.commands[leg].tauFeedForward + self.datas[leg].J.T @ footForce
 
             # joint PD control
-            legTorque += self.commands[leg].kpJoint @ (self.commands[leg].qDes - self.datas[leg].q)
+            # legTorque += self.commands[leg].kpJoint @ (self.commands[leg].qDes - self.datas[leg].q)
             legTorque += self.commands[leg].kdJoint @ (self.commands[leg].qdDes - self.datas[leg].qd)
 
             legTorques[leg*3:(leg+1)*3] = legTorque.flatten()

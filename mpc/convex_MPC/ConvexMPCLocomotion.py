@@ -499,6 +499,16 @@ class ConvexMPCLocomotion:
                     self.kd_swing,
                     casting=CASTING,
                 )
+                np.copyto(
+                    data._legController.commands[foot].forceFeedForward,
+                    self.feedforward_forces[foot] * 0.0,
+                    casting=CASTING,
+                )
+                np.copyto(
+                    data._legController.commands[foot].kdJoint,
+                    np.identity(3, dtype=DTYPE) * 0.0,
+                    casting=CASTING,
+                )
 
             else:  # * foot is in stance
                 self.first_swing_flags[foot] = True
