@@ -80,10 +80,10 @@ class ConvexMPCLocomotion:
 
         self.mpc_dt = self.dt * self.iterations_between_mpc
         self.default_iterations_between_mpc = self.iterations_between_mpc
-        print(
-            "[Convex MPC] dt: %.3f iterations: %d, dtMPC: %.3f"
-            % (self.dt, self.iterations_between_mpc, self.mpc_dt)
-        )
+        # print(
+        #     "[Convex MPC] dt: %.3f iterations: %d, dtMPC: %.3f"
+        #     % (self.dt, self.iterations_between_mpc, self.mpc_dt)
+        # )
 
         self.first_swing_flags = [True, True, True, True]
         self.is_first_run = True

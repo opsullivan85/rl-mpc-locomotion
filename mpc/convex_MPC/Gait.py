@@ -283,12 +283,16 @@ class CalculatedGait(GaitABC):
         if np.all(self.swing_durations == 0):
             return np.zeros((4, 1), dtype=np.float32)
 
-        # ignore warnings in the case that the swing_durations
-        # are zero. This is the expected behavior at startup
-        with np.errstate(divide='ignore'):
-            swing_phase = (self.time - self.swing_start_times) / self.swing_durations
-        # if swing phase is 1 or greater set to 0
-        swing_phase[swing_phase >= 1.0] = 0.0
+        # Compute swing phase, avoiding division by zero via masking
+        diff = self.time - self.swing_start_times
+        swing_phase = np.zeros_like(diff, dtype=np.float32)  # Initialize with zeros
+        mask = self.swing_durations.flatten() != 0  # Flatten for 1D boolean indexing
+        swing_phase[mask, 0] = (diff[mask, 0] / self.swing_durations[mask, 0])
+        
+        # Clamp to valid range: set negative or >=1 values to 0
+        swing_phase = np.clip(swing_phase, 0.0, 1.0)
+        swing_phase[swing_phase >= 1.0] = 0.0  # Explicitly handle end-of-swing
+        
         return swing_phase
 
     # override
