@@ -15,6 +15,7 @@ class SpecifiedFootstepLocomotion(ConvexMPCLocomotion):
         # self.footstep_locations_hip = np.zeros((4, 2), dtype=DTYPE)
         # offset nominal stance so feet are out to the sides and further
         # out from the robot front and back
+        # Leg ordering: [FR, FL, RR, RL] (Front Right, Front Left, Rear Right, Rear Left)
         self.footstep_locations_hip = np.asarray(
             [
                 [0.1, 0.1],  # Front Right
@@ -25,6 +26,7 @@ class SpecifiedFootstepLocomotion(ConvexMPCLocomotion):
         )
 
         """Four feet, desired x, y positions in respective hip frames
+        Leg ordering: [FR, FL, RR, RL] (Front Right, Front Left, Rear Right, Rear Left)
         """
 
         self.gait = CalculatedGait(dt, iterations_between_mpc, self.horizon_length)
