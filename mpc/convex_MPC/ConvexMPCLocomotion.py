@@ -553,7 +553,7 @@ class ConvexMPCLocomotion:
                 )
                 np.copyto(
                     data._legController.commands[foot].kdJoint,
-                    np.identity(3, dtype=DTYPE) * 0.2,
+                    np.identity(3, dtype=DTYPE) * 0.4,
                     casting=CASTING,
                 )
 
