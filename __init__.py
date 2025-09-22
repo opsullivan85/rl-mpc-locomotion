@@ -1,6 +1,5 @@
-import logging
-logger = logging.getLogger(__name__)
-del logging
+from src import get_logger
+logger = get_logger()
 
 from .mpc.robot_runner.RobotRunnerMin import RobotRunnerMin
 from .mpc.convex_MPC.ConvexMPCLocomotion import ConvexMPCLocomotion
