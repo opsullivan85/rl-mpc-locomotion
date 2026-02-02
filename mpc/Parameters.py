@@ -1,4 +1,4 @@
-from src.control.mpc.utils import GaitType, FSM_OperatingMode, FSM_StateName
+from gaitnet.control.mpc.utils import GaitType, FSM_OperatingMode, FSM_StateName
 
 class Parameters:
     cmpc_x_drag = 3.0

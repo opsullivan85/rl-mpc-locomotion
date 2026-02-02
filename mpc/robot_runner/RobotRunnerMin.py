@@ -1,9 +1,9 @@
-from src.control.mpc.common.DesiredStateCommand import DesiredStateCommand
-from src.control.mpc.FSM_states.ControlFSMData import ControlFSMData
-from src.control.mpc.common.Quadruped import Quadruped, RobotType
-from src.control.mpc.common.LegController import LegController
-from src.control.mpc.common.StateEstimator import StateEstimator
-from src.control.mpc.convex_MPC.SpecifiedFootstepLocomotion import SpecifiedFootstepLocomotion
+from gaitnet.control.mpc.common.DesiredStateCommand import DesiredStateCommand
+from gaitnet.control.mpc.FSM_states.ControlFSMData import ControlFSMData
+from gaitnet.control.mpc.common.Quadruped import Quadruped, RobotType
+from gaitnet.control.mpc.common.LegController import LegController
+from gaitnet.control.mpc.common.StateEstimator import StateEstimator
+from gaitnet.control.mpc.convex_MPC.SpecifiedFootstepLocomotion import SpecifiedFootstepLocomotion
 from nptyping import NDArray, Float32, Shape
 
 from typing import TYPE_CHECKING

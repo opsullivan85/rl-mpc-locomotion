@@ -1,6 +1,6 @@
 from enum import Enum, auto
 import numpy as np
-from src.control.mpc.utils import DTYPE
+from gaitnet.control.mpc.utils import DTYPE
 
 # Data structure containing parameters for quadruped robot
 class RobotType(Enum):

@@ -1,11 +1,11 @@
-from src.control.mpc.common.StateEstimator import StateEstimate
-from src.control.mpc.convex_MPC.Gait import CalculatedGait
-from src.control.mpc.FSM_states.ControlFSMData import ControlFSMData
-from src.control.mpc.convex_MPC.Gait import GaitABC
-from src.control.mpc.math_utils.orientation_tools import rpy_to_rot
+from gaitnet.control.mpc.common.StateEstimator import StateEstimate
+from gaitnet.control.mpc.convex_MPC.Gait import CalculatedGait
+from gaitnet.control.mpc.FSM_states.ControlFSMData import ControlFSMData
+from gaitnet.control.mpc.convex_MPC.Gait import GaitABC
+from gaitnet.control.mpc.math_utils.orientation_tools import rpy_to_rot
 import numpy as np
-from src.control.mpc.convex_MPC.ConvexMPCLocomotion import ConvexMPCLocomotion
-from src.control.mpc.utils import DTYPE
+from gaitnet.control.mpc.convex_MPC.ConvexMPCLocomotion import ConvexMPCLocomotion
+from gaitnet.control.mpc.utils import DTYPE
 from nptyping import NDArray, Float32, Shape
 
 

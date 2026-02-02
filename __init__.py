@@ -1,4 +1,4 @@
-from src import get_logger
+from gaitnet import get_logger
 logger = get_logger()
 
 from .mpc.robot_runner.RobotRunnerMin import RobotRunnerMin

@@ -98,7 +98,7 @@ else:
   include_dirs += NP_DIRS
 
 sources = [
-    "MPC_Controller/convex_MPC/mpc_osqp.cc",
+    "mpc/convex_MPC/mpc_osqp.cc",
     "extern/osqp/src/auxil.c",
     "extern/osqp/src/cs.c",
     "extern/osqp/src/ctrlc.c",

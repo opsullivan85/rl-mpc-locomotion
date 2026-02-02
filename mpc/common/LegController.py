@@ -1,9 +1,9 @@
 import math
 import numpy as np
 from math import sin, cos
-from src.control.mpc.Parameters import Parameters
-from src.control.mpc.common.Quadruped import Quadruped
-from src.control.mpc.utils import DTYPE, getSideSign
+from gaitnet.control.mpc.Parameters import Parameters
+from gaitnet.control.mpc.common.Quadruped import Quadruped
+from gaitnet.control.mpc.utils import DTYPE, getSideSign
 
 class LegControllerCommand:
     def __init__(self):

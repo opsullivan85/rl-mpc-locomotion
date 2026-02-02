@@ -2,21 +2,21 @@
 import sys
 import time
 
-from src.control.mpc.common.StateEstimator import StateEstimate
+from gaitnet.control.mpc.common.StateEstimator import StateEstimate
 import numpy as np
-from src.control.mpc.common.FootSwingTrajectory import FootSwingTrajectory
-from src.control.mpc.convex_MPC.Gait import GaitABC, OffsetDurationGait
-from src.control.mpc.FSM_states.ControlFSMData import ControlFSMData
-from src.control.mpc.Logger import Logger
-from src.control.mpc.math_utils.orientation_tools import (
+from gaitnet.control.mpc.common.FootSwingTrajectory import FootSwingTrajectory
+from gaitnet.control.mpc.convex_MPC.Gait import GaitABC, OffsetDurationGait
+from gaitnet.control.mpc.FSM_states.ControlFSMData import ControlFSMData
+from gaitnet.control.mpc.Logger import Logger
+from gaitnet.control.mpc.math_utils.orientation_tools import (
     CoordinateAxis,
     coordinateRotation,
 )
-from src.control.mpc.Parameters import Parameters
-from src.control.mpc.utils import CASTING, DTYPE, NUM_LEGS, getSideSign
+from gaitnet.control.mpc.Parameters import Parameters
+from gaitnet.control.mpc.utils import CASTING, DTYPE, NUM_LEGS, getSideSign
 
 try:
-    import src.control.mpc_osqp as mpc
+    import gaitnet.control.mpc_osqp as mpc
 except:
     print("You need to install 'rl-mpc-locomotion'")
     print("Run 'pip install -e .' in this repo")
