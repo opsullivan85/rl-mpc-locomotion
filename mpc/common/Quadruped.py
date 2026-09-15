@@ -42,10 +42,19 @@ class Quadruped:
             self._kneeLinkY_offset = 0.0
             self._abadLocation = np.array([0.1881, 0.04675, 0], dtype=DTYPE).reshape((3,1))
             self._bodyName = "trunk"
-            self._bodyMass = 5.204 * 2
-            self._bodyInertia = np.array([0.0168128557, 0, 0, 
-                                      0, 0.063009565, 0, 
-                                      0, 0, 0.0716547275]) * 5
+            # Measured from the actual Go1 USD articulation used in sim via
+            # scene["robot"].root_physx_view.get_masses()/get_inertias() (summed
+            # over all links / trunk-body inertia respectively). Total mass is the
+            # real whole-robot mass (trunk + 4 legs), not a trunk-only fudge factor.
+            # Trunk inertia already includes the knee actuators, which are
+            # physically mounted on the trunk and connected to the calf via a rod;
+            # it is scaled by a modest 2x (not the previous unfounded 5x) to
+            # approximate the remaining un-lumped leg-link inertia in this
+            # single-rigid-body model.
+            self._bodyMass = 13.100449
+            self._bodyInertia = np.array([0.0181444194, 0, 0,
+                                      0, 0.0679929703, 0,
+                                      0, 0, 0.0774220750]) * 2
             self._bodyHeight = 0.26
             # TODO: sync this up with the sim friction
             self._friction_coeffs = np.ones(4, dtype=DTYPE) * 0.8
