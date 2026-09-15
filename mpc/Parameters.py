@@ -4,6 +4,7 @@ class Parameters:
     cmpc_x_drag = 3.0
     cmpc_bonus_swing = 0.0
     cmpc_alpha = 1e-5
+    cmpc_max_linear_accel = 3.0  # m/s^2, rate limit on desired_x/y_velocity commands
 
     cmpc_print_solver_time = False
     cmpc_print_update_time = False

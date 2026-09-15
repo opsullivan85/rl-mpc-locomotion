@@ -52,9 +52,9 @@ class Quadruped:
             # (roll_pitch_yaw, position, angular_velocity, velocity, gravity_place_holder)
             self._mpc_weights = np.array([1.0, 1.5, 0.0,
                                  0.0, 0.0, 50,
-                                 0.0, 0.0, 0.1,
+                                 0.4, 0.4, 0.1,
                                  1.0, 1.0, 0.1,
-                                 0.0], dtype=DTYPE) * 10
+                                 0.0], dtype=DTYPE)
 
         elif robotype.value == RobotType.A1.value:
             self._abadLinkLength = 0.08505

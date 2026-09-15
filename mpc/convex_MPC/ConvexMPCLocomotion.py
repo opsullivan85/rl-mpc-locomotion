@@ -156,8 +156,16 @@ class ConvexMPCLocomotion:
     def setup_command(self, data: ControlFSMData):
 
         self.body_height = data._quadruped._bodyHeight
-        self.desired_x_velocity = data._desiredStateCommand.x_vel_cmd
-        self.desired_y_velocity = data._desiredStateCommand.y_vel_cmd
+
+        max_delta_v = Parameters.cmpc_max_linear_accel * self.dt
+        self.desired_x_velocity += np.clip(
+            data._desiredStateCommand.x_vel_cmd - self.desired_x_velocity,
+            -max_delta_v, max_delta_v,
+        )
+        self.desired_y_velocity += np.clip(
+            data._desiredStateCommand.y_vel_cmd - self.desired_y_velocity,
+            -max_delta_v, max_delta_v,
+        )
 
         self.desired_yaw_rate = data._desiredStateCommand.yaw_turn_rate
 
