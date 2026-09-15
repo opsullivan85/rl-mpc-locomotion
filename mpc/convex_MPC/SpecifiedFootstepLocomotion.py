@@ -31,6 +31,16 @@ class SpecifiedFootstepLocomotion(ConvexMPCLocomotion):
 
         self.gait = CalculatedGait(dt, iterations_between_mpc, self.horizon_length)
 
+        self.compensate_body_travel = True
+        """Whether to compensate specified footsteps for the body travel over the swing.
+
+        See `_update_footstep_placement`. Turn off to command the offsets exactly as
+        they were specified."""
+        self.max_body_travel_compensation = 0.1
+        """Largest distance (m) a footstep may be shifted by that compensation.
+
+        Keeps a velocity spike from throwing the target out of the leg's workspace."""
+
     def _get_gait(self, gait_number: int) -> GaitABC:
         return self.gait
 
@@ -62,11 +72,34 @@ class SpecifiedFootstepLocomotion(ConvexMPCLocomotion):
         # Set swing height
         self.foot_swing_trajectories[i].setHeight(self.body_height / 3)
 
+        # The specified footstep names a spot on the ground that was picked out while
+        # the foot was still on the other end of the swing, but this offset is executed
+        # relative to the hip at *touchdown*: the state estimator is never handed a world
+        # position (see StateEstimator.update), so the "global" frame everything here is
+        # built in is really the instantaneous body frame. The body carries the hip
+        # `v * swing_time` forward while the foot is in the air, so commanding the offset
+        # as-is lands the foot that far past the spot that was chosen - 3 to 6 cm at our
+        # speeds, which is several scan cells of whatever picked the footstep. Subtracting
+        # the travel cancels it, since the target is evaluated against the hip at
+        # touchdown: hip(touchdown) + offset - v*swing_time == hip(liftoff) + offset.
+        #
+        # Note this is the opposite sign to the Raibert style lead in the base class,
+        # which pushes the foot *ahead* of the body to keep it balanced, rather than onto
+        # one particular patch of ground.
+        body_travel = np.zeros((3, 1), dtype=DTYPE)
+        if self.compensate_body_travel:
+            body_travel[:2] = (
+                state_estimator_result.vBody[:2] * self.swing_times[i].item()
+            )
+            travel_distance = np.linalg.norm(body_travel)
+            if travel_distance > self.max_body_travel_compensation:
+                body_travel *= self.max_body_travel_compensation / travel_distance
+
         # Get the specified footstep location in the respective hip frame
         footstep_hip_frame = np.array(
             [
-                self.footstep_locations_hip[i, 0],
-                self.footstep_locations_hip[i, 1],
+                self.footstep_locations_hip[i, 0] - body_travel[0, 0],
+                self.footstep_locations_hip[i, 1] - body_travel[1, 0],
                 # this should (roughly) put the foot in contact with the ground
                 # assuming the body frame has this height in the world frame
                 # there will be some sin error if the body is not horizontal
